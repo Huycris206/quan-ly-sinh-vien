@@ -8,7 +8,7 @@ export default (sequelize, DataTypes) => {
         Role: { 
             type: DataTypes.STRING(20), 
             defaultValue: 'student',
-            validate: { isIn: [['student', 'admin']] }
+            validate: { isIn: [['student', 'admin','teacher']] }
         },
         IsDeleted: { type: DataTypes.BOOLEAN, defaultValue: false }
     }, { 

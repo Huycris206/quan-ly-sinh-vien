@@ -10,6 +10,7 @@ import defineMonHoc from './MonHoc.js';
 import defineLopHocPhan from './LopHocPhan.js';
 import defineKetQuaHocTap from './KetQuaHocTap.js';
 import defineChuongTrinhDaoTao from './ChuongTrinhDaoTao.js';
+import defineGiangVien from './GiangVien.js';
 
 // 2. Khởi tạo các Model
 const User = defineUser(sequelize, DataTypes);
@@ -20,6 +21,7 @@ const MonHoc = defineMonHoc(sequelize, DataTypes);
 const LopHocPhan = defineLopHocPhan(sequelize, DataTypes);
 const KetQuaHocTap = defineKetQuaHocTap(sequelize, DataTypes);
 const ChuongTrinhDaoTao = defineChuongTrinhDaoTao(sequelize, DataTypes);
+const GiangVien = defineGiangVien(sequelize, DataTypes);
 
 // 3. Thiết lập Mối quan hệ (Associations)
 User.hasOne(SinhVien, { foreignKey: 'UserId' });
@@ -33,6 +35,9 @@ SinhVien.belongsTo(ChuyenNganh, { foreignKey: 'ChuyenNganhId' });
 
 MonHoc.hasMany(LopHocPhan, { foreignKey: 'MonHocId' });
 LopHocPhan.belongsTo(MonHoc, { foreignKey: 'MonHocId' });
+
+GiangVien.hasMany(LopHocPhan, { foreignKey: 'Teacher_Id' });
+LopHocPhan.belongsTo(GiangVien, { foreignKey: 'Teacher_Id' });
 
 ChuyenNganh.belongsToMany(MonHoc, { through: ChuongTrinhDaoTao, foreignKey: 'ChuyenNganhId', otherKey: 'MonHocId' });
 MonHoc.belongsToMany(ChuyenNganh, { through: ChuongTrinhDaoTao, foreignKey: 'MonHocId', otherKey: 'ChuyenNganhId' });
@@ -50,5 +55,6 @@ export {
     MonHoc,
     LopHocPhan,
     KetQuaHocTap,
-    ChuongTrinhDaoTao
+    ChuongTrinhDaoTao,
+    GiangVien
 };

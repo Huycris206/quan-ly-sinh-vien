@@ -1,7 +1,7 @@
 export default (sequelize, DataTypes) => {
     return sequelize.define('GiangVien', {
         Id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-        UserId: { type: DataTypes.UUID, allowNull: false, unique: true },
+        UserId: { type: DataTypes.UUID, allowNull: false },
         Teacher_id: { type: DataTypes.STRING(20), allowNull: false, unique: true },
         Full_name: { type: DataTypes.STRING(100), allowNull: false },
         Gender: { 

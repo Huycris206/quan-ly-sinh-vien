@@ -8,16 +8,21 @@
 ## Triển khai dự án (Deploy & Run)
 ### 1. Khởi động Backend
 ```bash
+//mới clone code về
 cd backend
 npm install
+//chạy
+npm run dev
 
 ```
 API truy cập tại: `http://localhost:5001`
 
 ### 2. Khởi động Frontend
 ```bash
+//mới clone về
 cd frontend
 npm install
+//chạy
 npm run dev
 ```
 Giao diện chạy tại: `http://localhost:5173`

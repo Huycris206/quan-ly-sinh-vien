@@ -2,7 +2,7 @@ export default (sequelize, DataTypes) => {
     return sequelize.define('LopHocPhan', {
         Id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
         MaLop: { type: DataTypes.STRING(50), allowNull: false },
-        Teacher_id: { type: DataTypes.STRING(20), allowNull: false, unique: true },
+        Teacher_Id: { type: DataTypes.STRING(20), allowNull: false },
         MonHocId: { type: DataTypes.UUID, allowNull: false },
         HocKy: { type: DataTypes.STRING(20), allowNull: false },
         Sv_max: { type: DataTypes.INTEGER, defaultValue: 70 },

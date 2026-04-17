@@ -8,7 +8,7 @@ import nghanhRoute from './routes/nganhRoutes.js';
 import monHocRoute from './routes/monHocRoutes.js';
 import chuyenNganhRoute from './routes/chuyenNganhRoutes.js';
 import giangVienRoute from './routes/giangVienRoutes.js';
-import ChuongTrinhDaoTaoRoute  from './routes/chuongTrinhDaoTaoRoutes.js';
+// import ChuongTrinhDaoTaoRoute  from './routes/chuongTrinhDaoTaoRoutes.js';
 
 import cors from 'cors';
 
@@ -19,7 +19,7 @@ app.use(express.json());
 connectDB();
 //chayThu();
 
-app.use('/api/chuongtrinhdaotao', ChuongTrinhDaoTaoRoute);
+// app.use('/api/chuongtrinhdaotao', ChuongTrinhDaoTaoRoute);
 app.use('/api/giangvien', giangVienRoute);
 app.use('/api/chuyennganh', chuyenNganhRoute);
 app.use('/api/lophocphan', lopHocPhanRoute);

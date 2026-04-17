@@ -311,3 +311,6 @@ ALTER TABLE [dbo].[SinhVien]  WITH CHECK ADD CHECK  (([TrangThai]='TotNghiep' OR
 GO
 ALTER TABLE [dbo].[Users]  WITH CHECK ADD CHECK  (([Role]='student' OR [Role]='admin' OR [Role]='teacher'))
 GO
+ALTER TABLE [dbo].[GiangVien]  WITH CHECK ADD FOREIGN KEY([UserId])
+REFERENCES [dbo].[Users] ([Id])
+GO

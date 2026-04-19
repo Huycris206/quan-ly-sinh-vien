@@ -18,7 +18,7 @@ BEGIN
         ISNULL(ID, NEWID()), 
         TAIKHOAN_ID, 
         -- Công thức tạo mã: 'SV' + CCCD
-        'SV' + RIGHT(CCCD),
+        'SV' + CCCD,
         HOTEN, GIOITINH, NGAYSINH, SDT, EMAIL, CCCD, QUEQUAN, DIACHI, KHOAHOC, 
         CHUYENNGANH_ID, TRANGTHAI
     FROM inserted;

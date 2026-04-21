@@ -1,13 +1,13 @@
-import { LopHocPhan, MonHoc, GiangVien, sequelize } from "../models/index.js";
+import { LopHocPhan, MonHoc, GiangVien } from "../models/index.js";
 
 export const getAllLopHocPhan = async (req, res) => {
     try {
         const lopHocPhanList = await LopHocPhan.findAll({ 
-            where: { IsDeleted: false },
+            where: { DAXOA: false },
             // Nên include thêm thông tin Môn học và Giảng viên để frontend dễ hiển thị
             include: [
-                { model: MonHoc, attributes: ['Name', 'TinChi'] },
-                { model: GiangVien, attributes: ['Full_name'] }
+                { model: MonHoc, attributes: ['TENMONHOC', 'SOTINCHI'] },
+                { model: GiangVien, attributes: ['HOTEN'] }
             ]
         });
 
@@ -18,7 +18,7 @@ export const getAllLopHocPhan = async (req, res) => {
     } catch (error) {
         return res.status(500).json({
             success: false, 
-            message: 'Lỗi khi lấy danh sách Lớp học phần',
+            message: 'Lỗi khi lấy danh sách lớp học phần',
             error: error.message
         });
     }   
@@ -28,13 +28,17 @@ export const getLopHocPhanById = async (req, res) => {
     const { id } = req.params;
     try {
         const lopHocPhan = await LopHocPhan.findOne({ 
-            where: { Id: id, IsDeleted: false } 
+            where: { ID: id, DAXOA: false },
+            include: [
+                { model: MonHoc, attributes: ['TENMONHOC', 'SOTINCHI'] },
+                { model: GiangVien, attributes: ['HOTEN'] }
+            ]
         });
 
         if (!lopHocPhan) {
             return res.status(404).json({
                 success: false,
-                message: 'Không tìm thấy Lớp học phần!'
+                message: 'Không tìm thấy lớp học phần!'
             });
         }
 
@@ -45,7 +49,7 @@ export const getLopHocPhanById = async (req, res) => {
     } catch (error) {
         return res.status(500).json({
             success: false,
-            message: 'Lỗi khi lấy thông tin Lớp học phần',
+            message: 'Lỗi khi lấy thông tin lớp học phần',
             error: error.message
         });
     } 

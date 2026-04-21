@@ -1,13 +1,12 @@
 export default (sequelize, DataTypes) => {
     return sequelize.define('KetQuaHocTap', {
-        SinhVienId: { type: DataTypes.UUID, primaryKey: true },
-        LopHocPhanId: { type: DataTypes.UUID, primaryKey: true },
-        DiemSo: { 
-            type: DataTypes.FLOAT, 
-            defaultValue: 0.0,
-            validate: { min: 0.0, max: 10.0 }
-        }
+        DIEMCHUYENCAN: { type: DataTypes.FLOAT },
+        DIEMGIUAKY: { type: DataTypes.FLOAT },
+        DIEMCUOIKY: { type: DataTypes.FLOAT },
+        DIEMTONGKET: { type: DataTypes.FLOAT },
+        DIEMHECHU: { type: DataTypes.STRING(5) },
+        TRANGTHAI_DANGKY: { type: DataTypes.STRING(20), defaultValue: 'ThanhCong' }
     }, { 
-        tableName: 'KetQuaHocTap', timestamps: true, createdAt: 'CreatedAt', updatedAt: 'UpdatedAt' 
+        tableName: 'KETQUAHOCTAP', timestamps: true, createdAt: 'NGAYTAO', updatedAt: 'NGAYCAPNHAT' 
     });
 };

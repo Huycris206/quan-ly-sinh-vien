@@ -1,4 +1,5 @@
 import { SinhVien, ChuyenNganh, Nganh, TaiKhoan, sequelize } from '../models/index.js';
+import bcrypt from 'bcryptjs';
 
 export const getAllSinhVien = async (req, res) => {
     try {
@@ -17,7 +18,7 @@ export const getAllSinhVien = async (req, res) => {
                 },
                 {
                     model: TaiKhoan,
-                    attributes: ['USERNAME', 'ROLE']
+                    attributes: ['TENDANGNHAP', 'VAITRO']
                 }
             ]
         });
@@ -52,7 +53,7 @@ export const getSinhVienById = async (req, res) => {
                 },
                 {
                     model: TaiKhoan,
-                    attributes: ['USERNAME', 'ROLE']
+                    attributes: ['TENDANGNHAP', 'VAITRO']
                 }
             ]
         });
@@ -76,82 +77,84 @@ export const getSinhVienById = async (req, res) => {
 };
 
 export const createSinhVien = async (req, res) => {
-    const {
-        MASV,
-        HOTEN,
-        GIOITINH,
-        NGAYSINH,
-        SDT,
-        EMAIL,
-        CCCD,
-        QUEQUAN,
-        DIACHI,
-        KHOAHOC,
-        TRANGTHAI,
-        CHUYENNGANH_ID,
-        TAIKHOAN_ID
-    } = req.body;
-
-    const transaction = await sequelize.transaction();
     try {
-        // Kiểm tra chuyên ngành tồn tại
-        if (CHUYENNGANH_ID) {
-            const chuyenNganh = await ChuyenNganh.findOne({
-                where: { ID: CHUYENNGANH_ID, DAXOA: false },
-                transaction
+        const {
+            MATKHAU, HOTEN, GIOITINH, NGAYSINH, SDT, EMAIL, 
+            CCCD, QUEQUAN, DIACHI, KHOAHOC, TRANGTHAI, CHUYENNGANH_ID
+        } = req.body;
+        if(!CHUYENNGANH_ID) {
+            return res.status(400).json({
+                success: false,
+                message: 'Thiếu Chuyên ngành để tạo sinh viên!'
             });
-            if (!chuyenNganh) {
-                await transaction.rollback();
-                return res.status(404).json({
-                    success: false,
-                    message: 'Chuyên ngành không tồn tại!'
-                });
-            }
+        }
+        const checkChuyenNganh = await ChuyenNganh.findOne({ where: { ID: CHUYENNGANH_ID, DAXOA: false } });
+        if (!checkChuyenNganh) {
+            return res.status(404).json({ success: false, message: 'Chuyên ngành không tồn tại trong hệ thống!' });
+        }
+        // Bắt lỗi ngay từ cửa: Không có CCCD thì không thể tạo Tên Đăng Nhập
+        if (!CCCD) {
+            return res.status(400).json({ success: false, message: 'Thiếu CCCD!' });
         }
 
-        // Kiểm tra tài khoản tồn tại
-        if (TAIKHOAN_ID) {
-            const taiKhoan = await TaiKhoan.findOne({
-                where: { ID: TAIKHOAN_ID },
-                transaction
-            });
-            if (!taiKhoan) {
-                await transaction.rollback();
-                return res.status(404).json({
-                    success: false,
-                    message: 'Tài khoản không tồn tại!'
-                });
+        // Tự động giả lập MASV y hệt Trigger để Node.js lấy làm Tên Đăng Nhập và đi tìm data
+        const MASV_GENERATED = 'SV' + CCCD;
+
+        // Băm mật khẩu
+        const passwordToHash = MATKHAU || '123456';
+        const hashedPassword = await bcrypt.hash(passwordToHash, 10);
+
+        // Gọi SP với CHÍNH XÁC 10 THAM SỐ (đã bỏ @P_MASV)
+        await sequelize.query(
+            `EXEC [dbo].[PRO_THEM_SINHVIEN] 
+                @P_TENDANGNHAP = :username, 
+                @P_MATKHAU = :password,
+                @P_HOTEN = :hoten, 
+                @P_GIOITINH = :gioitinh,
+                @P_NGAYSINH = :ngaysinh, 
+                @P_SDT = :sdt, 
+                @P_EMAIL = :email,
+                @P_CCCD = :cccd, 
+                @P_CHUYENNGANH_ID = :chuyennganh_id,
+                @P_KHOAHOC = :khoahoc`,
+            {
+                replacements: {
+                    username: MASV_GENERATED, 
+                    password: hashedPassword,
+                    hoten: HOTEN,
+                    gioitinh: GIOITINH || null, 
+                    ngaysinh: NGAYSINH || null, 
+                    sdt: SDT || null, 
+                    email: EMAIL || null,
+                    cccd: CCCD, 
+                    chuyennganh_id: CHUYENNGANH_ID,
+                    khoahoc: KHOAHOC || null
+                },
+                type: sequelize.QueryTypes.RAW
             }
-        }
+        );
 
-        const newSinhVien = await SinhVien.create({
-            MASV,
-            HOTEN,
-            GIOITINH,
-            NGAYSINH,
-            SDT,
-            EMAIL,
-            CCCD,
-            QUEQUAN,
-            DIACHI,
-            KHOAHOC,
-            TRANGTHAI,
-            CHUYENNGANH_ID,
-            TAIKHOAN_ID
-        }, { transaction });
-
-        await transaction.commit();
+        // Tìm lại Sinh viên vừa tạo để trả về Client
+        const newSinhVien = await SinhVien.findOne({
+            where: { MASV: MASV_GENERATED, DAXOA: false },
+            include: [{ 
+                model: TaiKhoan, 
+                attributes: ['ID', 'TENDANGNHAP', 'VAITRO', 'NGAYTAO'] 
+            }]
+        });
+        
         return res.status(201).json({
             success: true,
             message: 'Thêm sinh viên thành công',
             data: newSinhVien
         });
+
     } catch (error) {
-        await transaction.rollback();
+        console.error("=== LỖI CỤ THỂ ===", error); 
         return res.status(500).json({
             success: false,
             message: 'Lỗi khi thêm sinh viên',
-            error: error.message
+            error: error.message || "Lỗi không xác định"
         });
     }
 };

@@ -1,23 +1,19 @@
 export default (sequelize, DataTypes) => {
     return sequelize.define('SinhVien', {
-        Id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-        UserId: { type: DataTypes.UUID, allowNull: false, unique: true },
-        Student_id: { type: DataTypes.STRING(20), allowNull: false, unique: true },
-        Full_name: { type: DataTypes.STRING(100), allowNull: false },
-        Gender: { 
-            type: DataTypes.STRING(10),
-            validate: { isIn: [['Nam', 'Nữ', 'Khác']] }
-        },
-        Birthday: { type: DataTypes.DATEONLY },
-        Phone: { type: DataTypes.STRING(15) },
-        ChuyenNganhId: { type: DataTypes.UUID, allowNull: false },
-        TrangThai: { 
-            type: DataTypes.STRING(20), 
-            defaultValue: 'DangHoc',
-            validate: { isIn: [['TotNghiep', 'ThoiHoc', 'BaoLuu', 'DangHoc']] }
-        },
-        IsDeleted: { type: DataTypes.BOOLEAN, defaultValue: false }
+        ID: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+        MASV: { type: DataTypes.STRING(20), allowNull: false, unique: true },
+        HOTEN: { type: DataTypes.STRING(100), allowNull: false },
+        GIOITINH: { type: DataTypes.STRING(10) },
+        NGAYSINH: { type: DataTypes.DATEONLY },
+        SDT: { type: DataTypes.STRING(15) },
+        EMAIL: { type: DataTypes.STRING(100) },
+        CCCD: { type: DataTypes.STRING(20), unique: true },
+        QUEQUAN: { type: DataTypes.STRING(255) },
+        DIACHI: { type: DataTypes.STRING(255) },
+        KHOAHOC: { type: DataTypes.STRING(20) },
+        TRANGTHAI: { type: DataTypes.STRING(20), defaultValue: 'DangHoc' },
+        DAXOA: { type: DataTypes.BOOLEAN, defaultValue: false }
     }, { 
-        tableName: 'SinhVien', timestamps: true, createdAt: 'CreatedAt', updatedAt: 'UpdatedAt' 
+        tableName: 'SINHVIEN', timestamps: true, createdAt: 'NGAYTAO', updatedAt: 'NGAYCAPNHAT' 
     });
 };

@@ -2,42 +2,42 @@ import { ChuyenNganh, Nganh } from "../models/index.js";
 
 export const getAllChuyenNganh = async (req, res) => {
     try {
-        const chuyenNganhList = await ChuyenNganh.findAll({ 
-            where: { IsDeleted: false },
+        const chuyenNganhList = await ChuyenNganh.findAll({
+            where: { DAXOA: false },
             include: [{
                 model: Nganh,
-                attributes: ['Name'] // Kéo theo tên của Ngành lớn
+                attributes: ['TENNGANH']
             }]
         });
-
         return res.status(200).json({
             success: true,
             data: chuyenNganhList
         });
     } catch (error) {
         return res.status(500).json({
-            success: false, 
-            message: 'Lỗi khi lấy danh sách Chuyên ngành',
+            success: false,
+            message: 'Lỗi khi lấy danh sách chuyên ngành',
             error: error.message
         });
-    }   
+    }
 };
 
 export const getChuyenNganhById = async (req, res) => {
     const { id } = req.params;
     try {
-        const chuyenNganh = await ChuyenNganh.findOne({ 
-            where: { Id: id, IsDeleted: false },
-            include: [{ model: Nganh, attributes: ['Name'] }]
+        const chuyenNganh = await ChuyenNganh.findOne({
+            where: { ID: id, DAXOA: false },
+            include: [{
+                model: Nganh,
+                attributes: ['TENNGANH']
+            }]
         });
-
         if (!chuyenNganh) {
             return res.status(404).json({
                 success: false,
-                message: 'Không tìm thấy Chuyên ngành!'
+                message: 'Không tìm thấy chuyên ngành!'
             });
         }
-
         return res.status(200).json({
             success: true,
             data: chuyenNganh
@@ -45,66 +45,65 @@ export const getChuyenNganhById = async (req, res) => {
     } catch (error) {
         return res.status(500).json({
             success: false,
-            message: 'Lỗi khi lấy thông tin Chuyên ngành',
+            message: 'Lỗi khi lấy thông tin chuyên ngành',
             error: error.message
         });
-    } 
+    }
 };
 
-export const createChuyenNganh = async (req, res) => { 
-    const { NganhId, Name } = req.body;
-    
+export const createChuyenNganh = async (req, res) => {
+    const { NGANH_ID, TENCHUYENNGANH } = req.body;
     try {
-        // Có thể thêm bước kiểm tra xem NganhId có tồn tại không trước khi tạo
-        const existingNganh = await Nganh.findOne({ where: { Id: NganhId, IsDeleted: false } });
+        const existingNganh = await Nganh.findOne({
+            where: { ID: NGANH_ID, DAXOA: false }
+        });
         if (!existingNganh) {
             return res.status(404).json({
                 success: false,
                 message: 'Ngành học gốc không tồn tại!'
             });
         }
-
-        const newChuyenNganh = await ChuyenNganh.create({ NganhId, Name });
-
+        const newChuyenNganh = await ChuyenNganh.create({
+            NGANH_ID,
+            TENCHUYENNGANH
+        });
         return res.status(201).json({
             success: true,
-            message: 'Tạo Chuyên ngành thành công!',
+            message: 'Tạo chuyên ngành thành công',
             data: newChuyenNganh
         });
     } catch (error) {
         return res.status(500).json({
             success: false,
-            message: 'Lỗi khi tạo Chuyên ngành',
+            message: 'Lỗi khi tạo chuyên ngành',
             error: error.message
         });
     }
-};  
+};
 
 export const updateChuyenNganh = async (req, res) => {
     const { id } = req.params;
-    const { NganhId, Name } = req.body;
-    
+    const updateData = req.body;
     try {
-        const chuyenNganh = await ChuyenNganh.findOne({ where: { Id: id, IsDeleted: false } });
-        
+        const chuyenNganh = await ChuyenNganh.findOne({
+            where: { ID: id, DAXOA: false }
+        });
         if (!chuyenNganh) {
             return res.status(404).json({
                 success: false,
-                message: 'Không tìm thấy Chuyên ngành!'
+                message: 'Không tìm thấy chuyên ngành!'
             });
         }
-       
-        await chuyenNganh.update({ NganhId, Name });
-
+        await chuyenNganh.update(updateData);
         return res.status(200).json({
-            success: true,  
-            message: 'Cập nhật Chuyên ngành thành công',
+            success: true,
+            message: 'Cập nhật chuyên ngành thành công',
             data: chuyenNganh
         });
     } catch (error) {
         return res.status(500).json({
             success: false,
-            message: 'Lỗi khi cập nhật Chuyên ngành',
+            message: 'Lỗi khi cập nhật chuyên ngành',
             error: error.message
         });
     }
@@ -113,26 +112,24 @@ export const updateChuyenNganh = async (req, res) => {
 export const deleteChuyenNganh = async (req, res) => {
     const { id } = req.params;
     try {
-        const chuyenNganh = await ChuyenNganh.findOne({ where: { Id: id, IsDeleted: false } });
-        
-        if (!chuyenNganh) {    
+        const chuyenNganh = await ChuyenNganh.findOne({
+            where: { ID: id, DAXOA: false }
+        });
+        if (!chuyenNganh) {
             return res.status(404).json({
                 success: false,
-                message: 'Không tìm thấy Chuyên ngành!'
+                message: 'Không tìm thấy chuyên ngành!'
             });
         }
-
-        chuyenNganh.IsDeleted = true;
-        await chuyenNganh.save();
-
+        await chuyenNganh.update({ DAXOA: true });
         return res.status(200).json({
             success: true,
-            message: 'Chuyên ngành đã được xóa (Soft Delete)'
+            message: 'Xóa chuyên ngành thành công'
         });
     } catch (error) {
         return res.status(500).json({
             success: false,
-            message: 'Lỗi khi xóa Chuyên ngành',
+            message: 'Lỗi khi xóa chuyên ngành',
             error: error.message
         });
     }

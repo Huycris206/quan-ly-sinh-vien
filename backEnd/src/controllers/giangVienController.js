@@ -1,65 +1,98 @@
-import { GiangVien } from "../models/index.js";
+import { GiangVien, TaiKhoan } from "../models/index.js";
 
 export const getAllGiangVien = async (req, res) => {
-    try{
-        const giangViens= await GiangVien.findAll({where:{ IsDeleted:false }});
+    try {
+        const giangViens = await GiangVien.findAll({
+            where: { DAXOA: false },
+            include: [{
+                model: TaiKhoan,
+                attributes: ['TENDANGNHAP', 'VAITRO']
+            }]
+        });
         return res.status(200).json({
             success: true,
             data: giangViens
-        })
-    }
-    catch(error){
-        return res.status(501).json({
+        });
+    } catch (error) {
+        return res.status(500).json({
             success: false,
-            message: "lỗi khi lấy danh sách giảng viên",
+            message: 'Lỗi khi lấy danh sách giảng viên',
             error: error.message
-        })
+        });
     }
 };
 
-export const getGiangVienById = async (req, res) =>{
-    const {id} =req.params;
+export const getGiangVienById = async (req, res) => {
+    const { id } = req.params;
     try {
-        const giangVien= await GiangVien.findOne({where:{ Id:id, IsDeleted: false }});
-        if(!giangVien){
+        const giangVien = await GiangVien.findOne({
+            where: { ID: id, DAXOA: false },
+            include: [{
+                model: TaiKhoan,
+                attributes: ['USERNAME', 'ROLE']
+            }]
+        });
+        if (!giangVien) {
             return res.status(404).json({
                 success: false,
-                message: "Không tìm thấy giảng viên"
-            })
+                message: 'Không tìm thấy giảng viên'
+            });
         }
         return res.status(200).json({
             success: true,
             data: giangVien
-        })
-    }
-    catch (error) {
-        return res.status(501).json({
+        });
+    } catch (error) {
+        return res.status(500).json({
             success: false,
-            message: "lỗi khi lấy thông tin giảng viên",
+            message: 'Lỗi khi lấy thông tin giảng viên',
             error: error.message
-        })
+        });
     }
 };
 
 export const createGiangVien = async (req, res) => {
-    const { UserId, Teacher_id, Full_name, Gender, Birthday, Phone } = req.body;
+    const {
+        MAGV,
+        HOTEN,
+        GIOITINH,
+        NGAYSINH,
+        CCCD,
+        SDT,
+        TAIKHOAN_ID
+    } = req.body;
     try {
+        // Kiểm tra tài khoản tồn tại
+        if (TAIKHOAN_ID) {
+            const taiKhoan = await TaiKhoan.findOne({
+                where: { ID: TAIKHOAN_ID }
+            });
+            if (!taiKhoan) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Tài khoản không tồn tại!'
+                });
+            }
+        }
+
         const newGiangVien = await GiangVien.create({
-            UserId,
-            Teacher_id,
-            Full_name,
-            Gender,
-            Birthday,
-            Phone
+            MAGV,
+            HOTEN,
+            GIOITINH,
+            NGAYSINH,
+            CCCD,
+            SDT,
+            TAIKHOAN_ID
         });
         return res.status(201).json({
             success: true,
+            message: 'Tạo giảng viên thành công',
             data: newGiangVien
         });
     } catch (error) {
-        return res.status(501).json({
+        return res.status(500).json({
             success: false,
-            message: "lỗi khi tạo giảng viên mới",
+            message: 'Lỗi khi tạo giảng viên',
             error: error.message
         });
     }
@@ -67,55 +100,53 @@ export const createGiangVien = async (req, res) => {
 
 export const updateGiangVien = async (req, res) => {
     const { id } = req.params;
-    const { UserId, Teacher_id, Full_name, Gender, Birthday, Phone } = req.body;
+    const updateData = req.body;
     try {
-        const giangVien = await GiangVien.findOne({ where: { Id: id, IsDeleted: false } }); 
+        const giangVien = await GiangVien.findOne({
+            where: { ID: id, DAXOA: false }
+        });
         if (!giangVien) {
             return res.status(404).json({
                 success: false,
-                message: "Không tìm thấy giảng viên"
+                message: 'Không tìm thấy giảng viên'
             });
         }
-        giangVien.UserId = UserId || giangVien.UserId;
-        giangVien.Teacher_id = Teacher_id || giangVien.Teacher_id;
-        giangVien.Full_name = Full_name || giangVien.Full_name;
-        giangVien.Gender = Gender || giangVien.Gender;
-        giangVien.Birthday = Birthday || giangVien.Birthday;
-        giangVien.Phone = Phone || giangVien.Phone;
-        await giangVien.save();
+        await giangVien.update(updateData);
         return res.status(200).json({
             success: true,
+            message: 'Cập nhật giảng viên thành công',
             data: giangVien
         });
     } catch (error) {
-        return res.status(501).json({
-            success: false, 
-            message: "lỗi khi cập nhật thông tin giảng viên",
+        return res.status(500).json({
+            success: false,
+            message: 'Lỗi khi cập nhật giảng viên',
             error: error.message
         });
-    }   
+    }
 };
 
 export const deleteGiangVien = async (req, res) => {
     const { id } = req.params;
     try {
-        const giangVien = await GiangVien.findOne({ where: { Id: id, IsDeleted: false } });
+        const giangVien = await GiangVien.findOne({
+            where: { ID: id, DAXOA: false }
+        });
         if (!giangVien) {
             return res.status(404).json({
                 success: false,
-                message: "Không tìm thấy giảng viên"
+                message: 'Không tìm thấy giảng viên'
             });
         }
-        giangVien.IsDeleted = true;
-        await giangVien.save();
+        await giangVien.update({ DAXOA: true });
         return res.status(200).json({
             success: true,
-            message: "Giảng viên đã được xóa (đánh dấu IsDeleted)"
+            message: 'Xóa giảng viên thành công'
         });
     } catch (error) {
-        return res.status(501).json({
+        return res.status(500).json({
             success: false,
-            message: "lỗi khi xóa giảng viên",
+            message: 'Lỗi khi xóa giảng viên',
             error: error.message
         });
     }

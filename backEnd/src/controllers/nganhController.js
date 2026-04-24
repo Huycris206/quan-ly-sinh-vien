@@ -2,10 +2,12 @@ import { Nganh } from "../models/index.js";
 
 export const getAllNganh = async (req, res) => {
     try {
-        const nganh = await Nganh.findAll({ where: { IsDeleted: false } });
+        const nganhs = await Nganh.findAll({
+            where: { DAXOA: false }
+        });
         return res.status(200).json({
             success: true,
-            data: nganh
+            data: nganhs
         });
     } catch (error) {
         return res.status(500).json({
@@ -19,7 +21,9 @@ export const getAllNganh = async (req, res) => {
 export const getNganhById = async (req, res) => {
     const { id } = req.params;
     try {
-        const nganh = await Nganh.findOne({ where: { Id: id, IsDeleted: false } });
+        const nganh = await Nganh.findOne({
+            where: { ID: id, DAXOA: false }
+        });
         if (!nganh) {
             return res.status(404).json({
                 success: false,
@@ -30,11 +34,30 @@ export const getNganhById = async (req, res) => {
             success: true,
             data: nganh
         });
-    }
-    catch (error) {
+    } catch (error) {
         return res.status(500).json({
             success: false,
             message: 'Lỗi khi lấy thông tin ngành',
+            error: error.message
+        });
+    }
+};
+
+export const createNganh = async (req, res) => {
+    const { TENNGANH } = req.body;
+    try {
+        const newNganh = await Nganh.create({
+            TENNGANH
+        });
+        return res.status(201).json({
+            success: true,
+            message: 'Tạo ngành thành công',
+            data: newNganh
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Lỗi khi tạo ngành',
             error: error.message
         });
     }
@@ -44,21 +67,19 @@ export const updateNganh = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
     try {
-        const nganh = await Nganh.findOne({ where: { Id: id, IsDeleted: false } });
+        const nganh = await Nganh.findOne({
+            where: { ID: id, DAXOA: false }
+        });
         if (!nganh) {
             return res.status(404).json({
                 success: false,
                 message: 'Không tìm thấy ngành!'
             });
         }
-        // Thực hiện cập nhật (chỉ cập nhật những trường được gửi lên)
-        await nganh.update({
-            ...updateData, // Cập nhật các trường từ body gửi lên
-   
-        });
+        await nganh.update(updateData);
         return res.status(200).json({
             success: true,
-            message: 'Cập nhật ngành thành công!',
+            message: 'Cập nhật ngành thành công',
             data: nganh
         });
     } catch (error) {
@@ -69,43 +90,28 @@ export const updateNganh = async (req, res) => {
         });
     }
 };
+
 export const deleteNganh = async (req, res) => {
     const { id } = req.params;
     try {
-        const nganh = await Nganh.findOne({ where: { Id: id, IsDeleted: false } });
+        const nganh = await Nganh.findOne({
+            where: { ID: id, DAXOA: false }
+        });
         if (!nganh) {
             return res.status(404).json({
                 success: false,
                 message: 'Không tìm thấy ngành!'
             });
         }
-        nganh.IsDeleted = true;
-        await nganh.save();
+        await nganh.update({ DAXOA: true });
         return res.status(200).json({
             success: true,
-            message: 'Ngành đã được xóa (Soft Delete)'
+            message: 'Xóa ngành thành công'
         });
     } catch (error) {
         return res.status(500).json({
             success: false,
             message: 'Lỗi khi xóa ngành',
-            error: error.message
-        });
-    }
-};
-export const createNganh = async (req, res) => {
-    const { Name } = req.body;
-    try {
-        const newNganh = await Nganh.create({ Name });
-        return res.status(201).json({
-            success: true,
-            message: 'Ngành đã được tạo thành công!',
-            data: newNganh
-        });
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: 'Lỗi khi tạo ngành',
             error: error.message
         });
     }

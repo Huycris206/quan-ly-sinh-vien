@@ -3,8 +3,10 @@ GO
 
 -- =============================================
 -- 1. VIEW: XEM DANH SÁCH SINH VIÊN ĐẦY ĐỦ THÔNG TIN
--- Giúp Backend không phải JOIN nhiều bảng phức tạp
 -- =============================================
+IF OBJECT_ID('View_SinhVien_FullInfo', 'V') IS NOT NULL DROP VIEW View_SinhVien_FullInfo;
+GO
+
 CREATE VIEW View_SinhVien_FullInfo AS
 SELECT 
     sv.Student_id AS [Mã SV],
@@ -13,7 +15,7 @@ SELECT
     sv.Birthday AS [Ngày Sinh],
     n.Name AS [Ngành],
     cn.Name AS [Chuyên Ngành],
-    sv.TrangThai AS [Trạng Thái Học],
+    sv.TRANGTHAI AS [Trạng Thái Học], 
     u.Username AS [Tài Khoản]
 FROM [dbo].[SinhVien] sv
 JOIN [dbo].[ChuyenNganh] cn ON sv.ChuyenNganhId = cn.Id
@@ -24,8 +26,10 @@ GO
 
 -- =============================================
 -- 2. TRIGGER: TỰ ĐỘNG CẬP NHẬT THỜI GIAN SỬA (UpdatedAt)
--- Áp dụng cho bảng SinhVien để theo dõi vết chỉnh sửa
 -- =============================================
+IF OBJECT_ID('trg_UpdateTimestamp_SinhVien', 'TR') IS NOT NULL DROP TRIGGER trg_UpdateTimestamp_SinhVien;
+GO
+
 CREATE TRIGGER trg_UpdateTimestamp_SinhVien
 ON [dbo].[SinhVien]
 AFTER UPDATE
@@ -41,8 +45,10 @@ GO
 
 -- =============================================
 -- 3. STORED PROCEDURE: THỐNG KÊ ĐIỂM THEO LỚP
--- Giúp xuất báo cáo nhanh cho từng lớp học phần
 -- =============================================
+IF OBJECT_ID('sp_ThongKeDiemTheoLop', 'P') IS NOT NULL DROP PROCEDURE sp_ThongKeDiemTheoLop;
+GO
+
 CREATE PROCEDURE sp_ThongKeDiemTheoLop
     @LopHocPhanId uniqueidentifier
 AS
@@ -60,4 +66,24 @@ BEGIN
     WHERE kq.LopHocPhanId = @LopHocPhanId
     ORDER BY kq.DiemSo DESC;
 END
+GO
+
+-- =============================================
+-- 4. VIEW: DANH SÁCH LỚP HỌC PHẦN CHI TIẾT
+-- =============================================
+IF OBJECT_ID('View_LopHocPhan_ChiTiet', 'V') IS NOT NULL DROP VIEW View_LopHocPhan_ChiTiet;
+GO
+
+CREATE VIEW View_LopHocPhan_ChiTiet AS
+SELECT 
+    lhp.MALOP AS [Mã Lớp],
+    mh.Name AS [Tên Môn Học],
+    gv.Full_name AS [Giảng Viên],
+    lhp.HOCKY AS [Học Kỳ],
+    lhp.SISO_TOIDA AS [Sĩ Số Tối Đa],
+    lhp.TRANGTHAI AS [Trạng Thái Lớp]
+FROM [dbo].[LopHocPhan] lhp
+LEFT JOIN [dbo].[MonHoc] mh ON lhp.MonHocId = mh.Id
+LEFT JOIN [dbo].[GiangVien] gv ON lhp.Teacher_id = gv.Id
+WHERE lhp.DAXOA = 0; 
 GO

@@ -138,3 +138,40 @@ export const deleteUser = async (req, res) => {
         });
     }
 };  
+
+import bcrypt from 'bcrypt';
+
+export const login = async (req, res) => {
+    const { TENDANGNHAP, MATKHAU } = req.body;
+    try {
+        const user = await TaiKhoan.findOne({
+            where: { TENDANGNHAP, DAXOA: false }
+        });
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Tài khoản không tồn tại!'
+            });
+        }
+        const isMatch = await bcrypt.compare(MATKHAU, user.MATKHAU);
+        if (!isMatch) {
+            return res.status(401).json({
+                success: false,
+                message: 'Mật khẩu không đúng!'
+            });
+        }
+        const userResponse = user.toJSON();
+        delete userResponse.MATKHAU;
+        return res.status(200).json({
+            success: true,
+            message: 'Đăng nhập thành công',
+            data: userResponse
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Lỗi khi đăng nhập',
+            error: error.message
+        });
+    }
+};

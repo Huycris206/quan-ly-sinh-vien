@@ -1,18 +1,18 @@
-import { Routes, Route } from 'react-router-dom'
-import NotFound from './pages/NotFound'
-import SinhVien from './pages/SinhVien'
-import Navbar from './components/Navbar'
+import React from 'react'
+import { BrowserRouter , Routes, Route } from 'react-router'
+import HomePage from './pages/HomePage.jsx'
 
-function App() {
+const App = () => {
   return (
-    <>
-      <Navbar />
+    <BrowserRouter>
       <Routes>
-        <Route path="/" element={<SinhVien />} />
-        <Route path="*" element={<NotFound />} />
+        <Route 
+          path="/" 
+          element={<HomePage />} 
+        />
       </Routes>
-    </>
+    </BrowserRouter>
   )
-}
+} 
 
 export default App

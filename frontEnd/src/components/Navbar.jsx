@@ -10,23 +10,47 @@ function Navbar() {
   }
 
   return (
-    <nav className="bg-blue-600 text-white px-6 py-4 flex items-center justify-between">
-      <h1 className="font-bold text-xl">Quản Lý Sinh Viên</h1>
-      <div className="flex gap-6 items-center">
+    <nav className="bg-white border-b border-gray-200 px-8 py-3 flex items-center justify-between shadow-sm sticky top-0 z-50">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center">
+          <span className="text-white font-bold text-sm">U</span>
+        </div>
+        <span className="font-bold text-gray-800 text-lg tracking-tight">
+          UTH <span className="text-green-600">SinhVien</span>
+        </span>
+      </div>
+
+      <div className="flex items-center gap-6">
         {user ? (
           <>
-            <Link to="/" className="hover:underline">Trang Chủ</Link>
-            <Link to="/sinhvien" className="hover:underline">Sinh Viên</Link>
-            <span className="text-sm">Xin chào, {user.TENDANGNHAP}</span>
-            <button
-              onClick={handleLogout}
-              className="bg-white text-blue-600 px-3 py-1 rounded hover:bg-gray-100"
-            >
-              Đăng Xuất
-            </button>
+            <Link to="/" className="text-gray-500 hover:text-green-600 text-sm font-medium transition-colors">
+              Trang Chủ
+            </Link>
+            <Link to="/sinhvien" className="text-gray-500 hover:text-green-600 text-sm font-medium transition-colors">
+              Sinh Viên
+            </Link>
+            <Link to="/monhoc" className="text-gray-500 hover:text-green-600 text-sm font-medium transition-colors">
+              Môn Học
+            </Link>
+            <div className="flex items-center gap-3 ml-2 pl-4 border-l border-gray-200">
+              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                <span className="text-green-700 font-semibold text-sm">
+                  {user.TENDANGNHAP?.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <span className="text-sm text-gray-600">{user.TENDANGNHAP}</span>
+              <button
+                onClick={handleLogout}
+                className="text-sm text-red-500 hover:text-red-600 font-medium transition-colors"
+              >
+                Đăng xuất
+              </button>
+            </div>
           </>
         ) : (
-          <Link to="/login" className="hover:underline">Đăng Nhập</Link>
+          <Link to="/login" className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
+            Đăng Nhập
+          </Link>
         )}
       </div>
     </nav>

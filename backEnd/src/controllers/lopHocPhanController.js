@@ -1,4 +1,4 @@
-import { LopHocPhan, MonHoc, GiangVien } from "../models/index.js";
+import { LopHocPhan, MonHoc, GiangVien ,sequelize} from "../models/index.js";
 
 export const getAllLopHocPhan = async (req, res) => {
     try {
@@ -55,37 +55,72 @@ export const getLopHocPhanById = async (req, res) => {
     } 
 };
 
-export const createLopHocPhan = async (req, res) => { 
-    const { MaLop, Teacher_id, MonHocId, HocKy, Sv_max, Status } = req.body;
-    
+export const createLopHocPhan = async (req, res) => {
     try {
-        // Kiểm tra xem mã lớp đã tồn tại chưa (nếu nghiệp vụ yêu cầu MaLop là duy nhất)
-        const existingLop = await LopHocPhan.findOne({ where: { MaLop: MaLop, IsDeleted: false } });
-        if (existingLop) {
-            return res.status(400).json({
-                success: false,
-                message: 'Mã lớp học phần đã tồn tại!'
+        const { MONHOC_ID, GIANGVIEN_ID, SISO_TOIDA, TRANGTHAI } = req.body;
+
+        if (!MONHOC_ID) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Vui lòng chọn Môn học cho lớp này!' 
             });
         }
 
-        const newLopHocPhan = await LopHocPhan.create({ 
-            MaLop, 
-            Teacher_id, 
-            MonHocId, 
-            HocKy, 
-            Sv_max: Sv_max || 70, 
-            Status: Status || 'Mo'
+        // 1. Gọi SP thêm Lớp học phần
+        const [resultSP] = await sequelize.query(
+            `EXEC [dbo].[PRO_THEM_LOPHOCPHAN] 
+                @P_MONHOC_ID = :monhoc_id,
+                @P_GIANGVIEN_ID = :giangvien_id,
+                @P_SISO_TOIDA = :siso,
+                @P_TRANGTHAI = :trangthai`,
+            {
+                replacements: {
+                    monhoc_id: MONHOC_ID,
+                    giangvien_id: GIANGVIEN_ID || null, // Nếu rỗng thì truyền null
+                    siso: SISO_TOIDA || 70,             // Mặc định 70 nếu client không gửi
+                    trangthai: TRANGTHAI || 'Mo'        // Mặc định 'Mo'
+                }
+            }
+        );
+
+        const spResponse = resultSP[0];
+
+        // 2. Xử lý lỗi (Môn học không tồn tại...)
+        if (spResponse && spResponse.StatusCode === 400) {
+            return res.status(400).json({
+                success: false,
+                message: spResponse.Message
+            });
+        }
+
+        if (spResponse && spResponse.StatusCode === 500) {
+            throw new Error(spResponse.Message);
+        }
+
+        // 3. Tìm lại dòng dữ liệu bằng cái NewId mà SP trả về
+        const newClassId = spResponse.NewId;
+
+        const newLopHocPhan = await LopHocPhan.findOne({
+            where: { ID: newClassId, DAXOA: false },
+            include: [
+                { model: MonHoc, attributes: ['TENMONHOC', 'SOTINCHI'] },
+                { model: GiangVien, attributes: ['MAGV', 'HOTEN'] }
+            ]
         });
 
+        // Trả về Frontend. Lúc này Frontend sẽ nhận được MALOP xịn (VD: LHP260001) 
+        // và HOCKY xịn (VD: HK-2-2026) do Trigger vừa tính toán.
         return res.status(201).json({
             success: true,
-            message: 'Tạo Lớp học phần thành công!',
+            message: spResponse.Message,
             data: newLopHocPhan
         });
+
     } catch (error) {
+        console.error("=== LỖI THÊM LỚP HỌC PHẦN ===", error);
         return res.status(500).json({
             success: false,
-            message: 'Lỗi khi tạo Lớp học phần',
+            message: 'Lỗi hệ thống khi thêm lớp học phần',
             error: error.message
         });
     }

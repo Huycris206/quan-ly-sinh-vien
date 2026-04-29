@@ -65,6 +65,13 @@ LichHoc.belongsTo(LopHocPhan, { foreignKey: 'LOPHOCPHAN_ID' });
 SinhVien.belongsToMany(LopHocPhan, { through: KetQuaHocTap, foreignKey: 'SINHVIEN_ID', otherKey: 'LOPHOCPHAN_ID' });
 LopHocPhan.belongsToMany(SinhVien, { through: KetQuaHocTap, foreignKey: 'LOPHOCPHAN_ID', otherKey: 'SINHVIEN_ID' });
 
+SinhVien.hasMany(KetQuaHocTap, { foreignKey: 'SINHVIEN_ID' });
+KetQuaHocTap.belongsTo(SinhVien, { foreignKey: 'SINHVIEN_ID' });
+
+// Khuyên dùng thêm: 1-N giữa LopHocPhan và KetQuaHocTap (để sau này cần query)
+LopHocPhan.hasMany(KetQuaHocTap, { foreignKey: 'LOPHOCPHAN_ID' });
+KetQuaHocTap.belongsTo(LopHocPhan, { foreignKey: 'LOPHOCPHAN_ID' });
+
 // N-M: Chuyên ngành - Môn học (Qua bảng CHUONGTRINHDAOTAO)
 ChuyenNganh.belongsToMany(MonHoc, { through: ChuongTrinhDaoTao, foreignKey: 'CHUYENNGANH_ID', otherKey: 'MONHOC_ID' });
 MonHoc.belongsToMany(ChuyenNganh, { through: ChuongTrinhDaoTao, foreignKey: 'MONHOC_ID', otherKey: 'CHUYENNGANH_ID' });

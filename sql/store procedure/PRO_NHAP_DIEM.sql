@@ -4,9 +4,10 @@ GO
 CREATE OR ALTER PROCEDURE [dbo].[PRO_NHAP_DIEM]
     @P_SINHVIEN_ID UNIQUEIDENTIFIER,
     @P_LOPHOCPHAN_ID UNIQUEIDENTIFIER,
-    @P_DIEM_CC FLOAT,
-    @P_DIEM_GK FLOAT,
-    @P_DIEM_CK FLOAT
+    -- Gán giá trị mặc định là NULL ngay tại tham số đầu vào để phòng hờ an toàn 2 lớp
+    @P_DIEM_CC FLOAT = NULL, 
+    @P_DIEM_GK FLOAT = NULL,
+    @P_DIEM_CK FLOAT = NULL
 AS
 BEGIN
     BEGIN TRY
@@ -17,15 +18,15 @@ BEGIN
                    AND TRANGTHAI_DANGKY = 'ThanhCong')
         BEGIN
             -- Thực hiện cập nhật điểm. 
-            -- Ngay khi lệnh này chạy, Trigger TRG_UPD_DIEM_TUDONG sẽ tự động được kích hoạt để tính Điểm tổng kết.
+            -- Dùng ISNULL: Nếu @P_DIEM_CC bị null, lấy giá trị DIEMCHUYENCAN hiện tại đắp vào.
             UPDATE [dbo].[KETQUAHOCTAP]
             SET 
-                DIEMCHUYENCAN = @P_DIEM_CC,
-                DIEMGIUAKY = @P_DIEM_GK,
-                DIEMCUOIKY = @P_DIEM_CK
+                DIEMCHUYENCAN = ISNULL(@P_DIEM_CC, DIEMCHUYENCAN),
+                DIEMGIUAKY = ISNULL(@P_DIEM_GK, DIEMGIUAKY),
+                DIEMCUOIKY = ISNULL(@P_DIEM_CK, DIEMCUOIKY)
             WHERE SINHVIEN_ID = @P_SINHVIEN_ID AND LOPHOCPHAN_ID = @P_LOPHOCPHAN_ID;
 
-            SELECT 200 AS StatusCode, N'Nhập điểm thành công!' AS Message;
+            SELECT 200 AS StatusCode, N'Nhập/Cập nhật điểm thành công!' AS Message;
         END
         ELSE
         BEGIN

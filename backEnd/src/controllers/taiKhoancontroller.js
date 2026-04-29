@@ -1,4 +1,4 @@
-
+import bcrypt from 'bcrypt';
 import { TaiKhoan, SinhVien, sequelize } from "../models/index.js";
 
 export const getAllUsers = async (req, res) => {
@@ -137,9 +137,7 @@ export const deleteUser = async (req, res) => {
             error: error.message
         });
     }
-};  
-
-import bcrypt from 'bcrypt';
+};
 
 export const login = async (req, res) => {
     const { TENDANGNHAP, MATKHAU } = req.body;

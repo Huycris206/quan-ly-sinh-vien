@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage.jsx'
 import SinhVien from './pages/SinhVien.jsx'
 import NotFound from './pages/NotFound.jsx'
 import Navbar from './components/Navbar.jsx'
+import LoginPage from './pages/LoginPage.jsx'
 
 const App = () => {
   return (
@@ -11,6 +12,7 @@ const App = () => {
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/sinhvien" element={<SinhVien />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

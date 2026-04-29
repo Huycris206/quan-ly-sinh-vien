@@ -33,17 +33,13 @@ function LoginPage() {
       <div className="hidden lg:flex w-1/2 bg-green-600 flex-col justify-between p-12">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center">
-            <span className="text-green-600 font-bold text-lg">U</span>
           </div>
-          <span className="text-white font-bold text-xl">UTH SinhVien</span>
+          <span className="text-white font-bold text-xl">Quản Lý Sinh Viên</span>
         </div>
         <div>
           <h1 className="text-white text-4xl font-bold leading-tight mb-4">
             Hệ thống quản lý<br />hồ sơ sinh viên
           </h1>
-          <p className="text-green-100 text-lg">
-            Trường Đại học Công nghệ TP.HCM
-          </p>
         </div>
         <div className="flex gap-4">
           <div className="bg-green-500 rounded-2xl p-4 flex-1">

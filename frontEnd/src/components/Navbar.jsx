@@ -13,10 +13,9 @@ function Navbar() {
     <nav className="bg-white border-b border-gray-200 px-8 py-3 flex items-center justify-between shadow-sm sticky top-0 z-50">
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-lg bg-green-600 flex items-center justify-center">
-          <span className="text-white font-bold text-sm">U</span>
         </div>
         <span className="font-bold text-gray-800 text-lg tracking-tight">
-          UTH <span className="text-green-600">SinhVien</span>
+          Quản Lý <span className="text-green-600">Sinh Viên</span>
         </span>
       </div>
 

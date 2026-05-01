@@ -4,7 +4,15 @@ import MainLayout from "./layouts/main/MainLayout";
 import AuthLayout from "./layouts/auth/AuthLayout";
 import Dashboard from "./pages/Dashboard/Dashboard";
 
-import Students from "./pages/SinhViens/SinhVienList";
+import ManageSinhViens from "./pages/SinhViens/ManageSinhViens.jsx";
+import SinhVienDetail from "./pages/SinhViens/SinhVienDetail.jsx";
+
+import ManageGiangViens from "./pages/GiangViens/ManageGiangViens.jsx";
+import GiangVienDetail from "./pages/GiangViens/GiangVienDetail.jsx";
+
+import ManageLopHocPhans from "./pages/LopHocPhans/ManageLopHocPhans.jsx";
+import LopHocPhanDetail from "./pages/LopHocPhans/LopHocPhanDetail.jsx";
+
 import Login from "./pages/Auth/LoginPage";
 import PrivateRoute from "./context/PrivateRoute";
 import { AuthProvider } from "./context/AuthContext";
@@ -26,7 +34,15 @@ export default function App() {
             <Route element={<MainLayout />}>
 
               <Route path="/" element={<Dashboard />} />
-              <Route path="/students" element={<Students />} />
+
+              <Route path="/sinhviens" element={<ManageSinhViens />} />
+              <Route path="/sinhviens/:id" element={<SinhVienDetail />} />
+
+              <Route path="/giangviens" element={<ManageGiangViens />} />
+              <Route path="/giangviens/:id" element={<GiangVienDetail />} />
+
+              <Route path="/lophocphans" element={<ManageLopHocPhans />} />
+              <Route path="/lophocphans/:id" element={<LopHocPhanDetail />} />
 
             </Route>
 

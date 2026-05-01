@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet,Link } from "react-router-dom";
 import { Toaster } from "sonner";
 import { 
   LayoutDashboard, 
   Users, 
+  UserRoundPen,
   GraduationCap, 
   Settings,  
   Menu, 
@@ -17,10 +18,11 @@ import LogOutBtn from "./MainLayoutComponent/logOutBtn"; // Component nút đăn
 // Danh sách menu điều hướng
 const NAV_ITEMS = [
   { title: "Tổng quan", path: "/", icon: <LayoutDashboard className="w-5 h-5" /> },
-  { title: "Sinh viên", path: "/students", icon: <Users className="w-5 h-5" /> },
-  { title: "Lớp học", path: "/classes", icon: <GraduationCap className="w-5 h-5" /> },
+  { title: "Giảng viên", path: "/giangviens", icon: <UserRoundPen className="w-5 h-5" /> },
+  { title: "Sinh viên", path: "/sinhviens", icon: <Users className="w-5 h-5" /> },
+  { title: "Lớp học", path: "/lophocphans", icon: <GraduationCap className="w-5 h-5" /> },
   { title: "Cài đặt", path: "/settings", icon: <Settings className="w-5 h-5" /> },
-];
+];  
 
 export default function MainLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -31,12 +33,14 @@ export default function MainLayout() {
     <div className="flex h-screen w-full bg-muted/40 font-geist">
       {/* 1. SIDEBAR (Desktop) */}
       <aside className="hidden w-64 flex-col border-r bg-background md:flex">
-        <div className="flex h-16 items-center border-b px-6">
-          <GraduationCap className="mr-2 h-6 w-6 text-primary" />
-          <span className="text-lg font-bold tracking-tight text-foreground">
-            Student Manager
-          </span>
-        </div>
+        <Link to='/'>
+          <div className="flex h-16 items-center border-b px-6" >
+            <GraduationCap className="mr-2 h-6 w-6 text-primary" />
+            <span className="text-lg font-bold tracking-tight text-foreground">
+              Student Manager
+            </span>
+          </div>
+        </Link>
 
         <div className="flex-1 overflow-auto py-4">
           <nav className="grid gap-1 px-4">

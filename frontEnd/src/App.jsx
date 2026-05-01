@@ -1,18 +1,44 @@
-import React from 'react'
-import { BrowserRouter , Routes, Route } from 'react-router'
-import HomePage from './pages/HomePage.jsx'
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-const App = () => {
+import MainLayout from "./layouts/main/MainLayout";
+import AuthLayout from "./layouts/auth/AuthLayout";
+import Dashboard from "./pages/Dashboard/Dashboard";
+
+import Students from "./pages/SinhViens/SinhVienList";
+import Login from "./pages/Auth/LoginPage";
+import PrivateRoute from "./context/PrivateRoute";
+import { AuthProvider } from "./context/AuthContext";
+
+export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route 
-          path="/" 
-          element={<HomePage />} 
-        />
-      </Routes>
-    </BrowserRouter>
-  )
-} 
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          
+          {/* Luồng Auth: Không cần đăng nhập */}
+          <Route element={<AuthLayout />}>
+            <Route path="/login" element={<Login />} />
+            {/* Có thể thêm /forgot-password, /reset-password ở đây */}
+          </Route>
+          {/* Luồng Chính: Cần đăng nhập */}
+          <Route element={<PrivateRoute />}>
 
-export default App
+            <Route element={<MainLayout />}>
+
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/students" element={<Students />} />
+
+            </Route>
+
+          </Route>
+        
+          
+
+          {/* Catch-all: Nếu gõ link linh tinh thì đẩy về trang chủ */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}

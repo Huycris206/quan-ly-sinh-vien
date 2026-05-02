@@ -80,7 +80,7 @@ export const createSinhVien = async (req, res) => {
     try {
         const {
             MATKHAU, HOTEN, GIOITINH, NGAYSINH, SDT, EMAIL, 
-            CCCD, QUEQUAN, DIACHI, KHOAHOC, TRANGTHAI, CHUYENNGANH_ID
+            CCCD, QUEQUAN, DIACHI, TRANGTHAI, CHUYENNGANH_ID
         } = req.body;
         if(!CHUYENNGANH_ID) {
             return res.status(400).json({
@@ -115,8 +115,8 @@ export const createSinhVien = async (req, res) => {
                 @P_SDT = :sdt, 
                 @P_EMAIL = :email,
                 @P_CCCD = :cccd, 
-                @P_CHUYENNGANH_ID = :chuyennganh_id,
-                @P_KHOAHOC = :khoahoc`,
+                @P_CHUYENNGANH_ID = :chuyennganh_id`,
+            
             {
                 replacements: {
                     username: MASV_GENERATED, 
@@ -128,7 +128,6 @@ export const createSinhVien = async (req, res) => {
                     email: EMAIL || null,
                     cccd: CCCD, 
                     chuyennganh_id: CHUYENNGANH_ID,
-                    khoahoc: KHOAHOC || null
                 },
                 type: sequelize.QueryTypes.RAW
             }

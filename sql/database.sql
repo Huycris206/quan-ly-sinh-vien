@@ -110,6 +110,7 @@ CREATE TABLE [dbo].[LOPHOCPHAN](
 	[MONHOC_ID] [uniqueidentifier] NOT NULL,
 	[GIANGVIEN_ID] [uniqueidentifier] NULL,
 	[HOCKY] [varchar](20) NOT NULL,
+	[SISO] [int] DEFAULT 0,
 	[SISO_TOIDA] [int] DEFAULT 70,
 	[TRANGTHAI] [varchar](20) DEFAULT 'Mo',
 	[NGAYTAO] [datetime2](7) DEFAULT getdate(),

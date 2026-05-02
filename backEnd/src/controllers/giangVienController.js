@@ -172,3 +172,43 @@ export const deleteGiangVien = async (req, res) => {
         });
     }
 };
+export const getLopHocPhanByGiangVienView = async (req, res) => {
+    // 1. Nhận ID giảng viên từ URL (Ví dụ: /api/giangvien/:id/lophocphan)
+    const { id } = req.params;
+
+    try {
+        // 2. Gọi Stored Procedure / Query từ View bằng Sequelize
+        // Lưu ý: Đảm bảo bạn đã chạy script tạo View trong SQL Server trước khi gọi hàm này
+        const [results] = await sequelize.query(
+            `SELECT * FROM [dbo].[View_DanhSachLop_GiangVien] 
+             WHERE GIANGVIEN_ID = :idGV
+             ORDER BY HOCKY DESC, MALOP ASC`,
+            {
+                replacements: { idGV: id }
+            }
+        );
+
+        // 3. Xử lý trường hợp giảng viên chưa có lớp nào
+        if (!results || results.length === 0) {
+            return res.status(200).json({ // Trả về 200 kèm mảng rỗng để Frontend dễ xử lý thay vì báo lỗi 404
+                success: true,
+                message: 'Giảng viên này hiện chưa phụ trách lớp học phần nào.',
+                data: [] 
+            });
+        }
+
+        // 4. Trả về kết quả thành công
+        return res.status(200).json({
+            success: true,
+            data: results
+        });
+
+    } catch (error) {
+        console.error("=== LỖI KHI LẤY LỚP TỪ VIEW ===", error);
+        return res.status(500).json({
+            success: false,
+            message: 'Lỗi khi lấy danh sách lớp của giảng viên',
+            error: error.message
+        });
+    }
+};

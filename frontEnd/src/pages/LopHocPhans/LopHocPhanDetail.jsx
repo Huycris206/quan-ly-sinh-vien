@@ -7,35 +7,30 @@ import {
   ArrowLeft, BookOpen, UserCircle, 
   Users, Calendar, Info
 } from "lucide-react";
-import SinhVienTable from "../SinhViens/SinhVienTable";
+import SinhVienLopManager from "./SinhVienLopManager";
 
 export default function LopHocPhanDetail() {
-  // 1. Lấy mã lớp từ URL (ví dụ: /lophocphans/SE101.M11 -> id = SE101.M11)
   const { id } = useParams(); 
   const navigate = useNavigate();
   const [sinhViens, setSinhViens] = useState([]);
   const [loadingSV, setLoadingSV] = useState(false);
 
-  
-  
-  // 2. Lấy dữ liệu từ Hook
-  const { lopHocPhans, loading, error, fetchSinhViensByLopHocPhan } = useLopHocPhans();
+  const { lopHocPhans, loading, error, fetchSinhViensByLopHocPhan,dangKyLopHocPhan  } = useLopHocPhans();
 
-  // 3. Tìm lớp học phần khớp với MALOP trên URL
   const lopHocPhan = lopHocPhans.find((lop) => lop.MALOP?.toLowerCase() === id?.toLowerCase());
+  
+
+  const loadSinhViens = async () => {
+      if (!lopHocPhan?.ID) return;
+      setLoadingSV(true);
+      const data = await fetchSinhViensByLopHocPhan(lopHocPhan.ID);
+      setSinhViens(data);
+      setLoadingSV(false);
+  };
 
   useEffect(() => {
-    const loadSinhViens = async () => {
-        if (!lopHocPhan?.ID) return;
-
-        setLoadingSV(true);
-        const data = await fetchSinhViensByLopHocPhan(lopHocPhan.ID);
-        setSinhViens(data);
-        setLoadingSV(false);
-    };
-
     loadSinhViens();
-}, [lopHocPhan]);
+  }, [lopHocPhan]);
 
   // =================== RENDER TRẠNG THÁI ===================
   if (loading) {
@@ -73,7 +68,6 @@ export default function LopHocPhanDetail() {
   return (
     <div className="py-6 px-4 md:px-8 max-w-6xl mx-auto w-full">
       
-      {/* Nút Quay Lại */}
       <button 
         onClick={() => navigate(-1)}
         className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground mb-6 transition-colors"
@@ -81,7 +75,6 @@ export default function LopHocPhanDetail() {
         <ArrowLeft size={16} /> Quay lại
       </button>
 
-      {/* HEADER CHI TIẾT LỚP */}
       <div className="flex items-center justify-between border-b border-border pb-4 mb-6">
         <div>
           <h2 className="text-2xl font-bold text-foreground">
@@ -94,7 +87,6 @@ export default function LopHocPhanDetail() {
           </p>
         </div>
         
-        {/* Trạng thái lớp */}
         <div>
           <span className={`inline-flex items-center rounded-full border px-4 py-1.5 text-sm font-semibold shadow-sm ${
             lopHocPhan.TRANGTHAI === 'Mo' ? 'bg-blue-100/90 text-blue-700 border-blue-200' : 
@@ -113,12 +105,10 @@ export default function LopHocPhanDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* CỘT TRÁI: Thông tin Giảng viên & Lớp */}
-        <div className="md:col-span-1 space-y-6">
-          
-          {/* Thông tin Giảng viên */}
+        <div className="lg:col-span-1 space-y-6">
           <div className="bg-background rounded-xl border border-border shadow-sm p-5">
             <h3 className="font-semibold text-lg border-b border-border pb-2 mb-4 flex items-center gap-2">
               <UserCircle className="w-5 h-5 text-primary" /> Phụ trách giảng dạy
@@ -130,7 +120,6 @@ export default function LopHocPhanDetail() {
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground/70">Họ và Tên</p>
                   <p className="font-medium text-foreground">{lopHocPhan.GiangVien.HOTEN}</p>
                 </div>
-                {/* Lưu ý: Nếu hook getAll chỉ lấy HOTEN thì MAGV và SDT dưới đây sẽ undefined */}
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground/70">Mã GV</p>
                   <p className="font-medium text-foreground uppercase">{lopHocPhan.GiangVien.MAGV || '---'}</p>
@@ -141,7 +130,6 @@ export default function LopHocPhanDetail() {
             )}
           </div>
 
-          {/* Cấu hình lớp */}
           <div className="bg-background rounded-xl border border-border shadow-sm p-5">
             <h3 className="font-semibold text-lg border-b border-border pb-2 mb-4 flex items-center gap-2">
               <Info className="w-5 h-5 text-primary" /> Cấu hình lớp
@@ -159,32 +147,16 @@ export default function LopHocPhanDetail() {
           </div>
         </div>
 
-        {/* CỘT PHẢI: Danh sách sinh viên */}
-        <div className="md:col-span-2 bg-background rounded-xl border border-border shadow-sm overflow-hidden flex flex-col min-h-[400px]">
-          <div className="p-5 border-b border-border bg-muted/20">
-            <h3 className="font-semibold text-lg flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" /> Danh sách sinh viên
-            </h3>
-          </div>
-          
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-             <div className="bg-muted/50 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-                <Users className="w-8 h-8 text-muted-foreground" />
-             </div>
-             <div className="p-4">
-                {loadingSV ? (
-                    <p className="text-center text-muted-foreground">Đang tải danh sách sinh viên...</p>
-                ) : (
-                    <SinhVienTable
-                    sinhViens={sinhViens}
-                    onEdit={() => {}}
-                    onDelete={() => {}}
-                    />
-                )}
-            </div>
-             
-               
-          </div>
+        {/* CỘT PHẢI: Danh sách sinh viên CÓ THANH TRƯỢT */}
+        <div className="lg:col-span-2">
+          <SinhVienLopManager 
+            lopHocPhanId={lopHocPhan.ID}
+            sinhViensDanhSach={sinhViens}
+            loadingSV={loadingSV}
+            sisoToiDa={lopHocPhan.SISO_TOIDA}
+            onRefresh={loadSinhViens} // Hàm này sẽ chạy lại khi Popup báo Thêm thành công
+            dangKyLopHocPhan={dangKyLopHocPhan} 
+          />
         </div>
 
       </div>

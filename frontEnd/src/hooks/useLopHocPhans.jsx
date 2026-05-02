@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { da } from "zod/locales";
 
 export const useLopHocPhans = () => {
   const [lopHocPhans, setLopHocPhans] = useState([]);
@@ -120,6 +121,29 @@ export const useLopHocPhans = () => {
       alert("Lỗi khi xóa lớp học phần. Vui lòng thử lại!");
     }
   };
+  const dangKyLopHocPhan = async (sinhVienId, lopHocPhanId) => {
+  try {
+    // Nhớ thay đổi /api/ketquahoctap thành đúng route gốc bạn khai báo trong server.js nhé
+    const res = await axios.post(
+      "http://localhost:5001/api/ketquahoctap/dang-ky-mon-hoc", 
+      {
+        SINHVIEN_ID: sinhVienId,
+        LOPHOCPHAN_ID: lopHocPhanId
+      },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (res.data.success) {
+      alert(res.data.message || "Thêm sinh viên vào lớp thành công!");
+      return true;
+    }
+  } catch (err) {
+    console.error("Lỗi đăng ký:", err);
+    const msg = err.response?.data?.message || "Lỗi hệ thống khi đăng ký môn học.";
+    alert(msg);
+    return false;
+  }
+};
 
   // Tự động gọi hàm lấy dữ liệu lần đầu khi component được render
   useEffect(() => {
@@ -134,6 +158,7 @@ export const useLopHocPhans = () => {
     createLopHocPhan,
     updateLopHocPhan,
     deleteLopHocPhan,
+    dangKyLopHocPhan,
     fetchSinhViensByLopHocPhan 
   };
 };

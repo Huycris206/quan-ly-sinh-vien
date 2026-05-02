@@ -1,17 +1,27 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useSinhViens } from "../../hooks/useSinhViens";
+import { useSinhViens } from "../../hooks/sinhVienHooks/useSinhViens";
 import Loadingcomp from "@/components/ui/loading.jsx"; // Check lại đường dẫn
 import { 
   ArrowLeft, Mail, Phone, Calendar, 
   CreditCard, User, GraduationCap, MapPin, Briefcase 
 } from "lucide-react";
 
+import { useSinhVienLogic } from "@/hooks/sinhVienHooks/useSinhVienLogics";
+import SinhVienModal from "./component/SinhVienModal.jsx";
+
 export default function SinhVienDetail() {
   // 1. Lấy mã sinh viên từ URL (ví dụ: /students/SV001 -> id = SV001)
   const { id } = useParams(); 
   const navigate = useNavigate();
   
+  const { 
+    isAddingMode, // Bắt buộc lấy ra để Modal biết là đang Thêm hay Sửa
+    editingStudent,
+    setEditingStudent, 
+    handleCloseModal,
+    handleEditSubmit
+  } = useSinhVienLogic();
   // 2. Lấy dữ liệu từ Hook
   const { sinhViens, loading, error } = useSinhViens();
 
@@ -54,14 +64,24 @@ export default function SinhVienDetail() {
   // =================== RENDER GIAO DIỆN CHÍNH ===================
   return (
     <div className="py-6 px-4 md:px-8 max-w-5xl mx-auto w-full">
-      
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+
+        <button 
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground mb-6 transition-colors"
+        >
+          <ArrowLeft size={16} /> Quay lại
+        </button>
+        <button
+          onClick={() => setEditingStudent(student)}
+          className="px-3 py-1 text-xl border rounded text-sm font-medium text-muted-foreground hover:text-foreground mb-6 transition-colors"
+        >
+          Sửa
+        </button>
+
+      </div>
       {/* Nút Quay Lại */}
-      <button 
-        onClick={() => navigate(-1)}
-        className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground mb-6 transition-colors"
-      >
-        <ArrowLeft size={16} /> Quay lại
-      </button>
+      
 
       {/* THẺ HỒ SƠ TỔNG QUAN (Header Profile) */}
       <div className="bg-background rounded-xl border border-border shadow-sm overflow-hidden mb-6">
@@ -179,6 +199,14 @@ export default function SinhVienDetail() {
         </div>
 
       </div>
+
+      <SinhVienModal 
+        isAddingMode={isAddingMode}
+        editingStudent={editingStudent}
+        onClose={handleCloseModal}
+        onEditSubmit={handleEditSubmit}
+      />
+
     </div>
   );
 }

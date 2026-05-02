@@ -23,8 +23,14 @@ const SinhVienTable = ({ sinhViens, onEdit, onDelete }) => {
                 <td className="py-3 px-6 font-medium">{sv.MASV}</td>
                 <td className="py-3 px-6">{sv.HOTEN}</td>
 
-                <td className="py-3 px-6">
-                  {sv.ChuyenNganh?.TENCHUYENNGANH || "Chưa xếp"}
+                <td className="py-3 px-6 font-medium">
+                  {
+                    sv.ChuyenNganh?.TENCHUYENNGANH || // Lấy từ Sequelize (Trang quản lý Sinh Viên)
+                    sv.TENCHUYENNGANH ||              // Lấy từ View SQL (Trang chi tiết lớp - chữ hoa)
+                    sv.tenchuyennganh ||              // Lấy từ View SQL (Phòng hờ chữ thường)
+                    sv.ChuyenNganh_TENCHUYENNGANH ||  // Phòng hờ cái View cũ hôm qua
+                    "Chưa xếp"                        // Nếu null thì hiện "Chưa xếp"
+                  }
                 </td>
 
                 <td className="py-3 px-6">{sv.SDT || "---"}</td>

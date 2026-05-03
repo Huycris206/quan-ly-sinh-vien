@@ -6,7 +6,7 @@ GO
 -- ==========================================
 
 -- View 1: Truy vấn danh sách sinh viên theo Khoa/Ngành đầy đủ thông tin
-CREATE VIEW [dbo].[View_HoSoSinhVien]
+CREATE OR ALTER VIEW [dbo].[View_HoSoSinhVien]
 AS
 SELECT 
     sv.MASV,
@@ -28,10 +28,10 @@ INNER JOIN
 GO
 
 -- View 2: Xem chi tiết bảng điểm của sinh viên (kèm trạng thái đăng ký môn)
-CREATE VIEW [dbo].[View_BangDiemChiTiet]
+CREATE OR ALTER VIEW [dbo].[View_BangDiemChiTiet]
 AS
 SELECT 
-    kq.SINHVIEN_ID,      -- Thêm cột ID Sinh Viên
+    kq.SINHVIEN_ID,
     kq.LOPHOCPHAN_ID,
     sv.MASV,
     sv.HOTEN,
@@ -55,8 +55,8 @@ INNER JOIN
     [dbo].[MONHOC] mh ON lhp.MONHOC_ID = mh.ID;
 GO
 
--- View 3: Lấy Thời khóa biểu của sinh viên theo Học kỳ (Chỉ lấy môn đăng ký thành công)
-CREATE VIEW [dbo].[View_ThoiKhoaBieu]
+-- View 3: Lấy Thời khóa biểu (Chỉ lấy môn đăng ký thành công)
+CREATE OR ALTER VIEW [dbo].[View_ThoiKhoaBieu]
 AS
 SELECT 
     sv.MASV,

@@ -31,6 +31,8 @@ GO
 CREATE VIEW [dbo].[View_BangDiemChiTiet]
 AS
 SELECT 
+    kq.SINHVIEN_ID,      -- Thêm cột ID Sinh Viên
+    kq.LOPHOCPHAN_ID,
     sv.MASV,
     sv.HOTEN,
     mh.TENMONHOC,

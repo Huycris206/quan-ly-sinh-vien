@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { useSinhVienLogic } from "@/hooks/sinhVienHooks/useSinhVienLogics";
+import { useChuyenNganhs } from "@/hooks/useChuyenNganhs"; // Đổi lại đường dẫn nếu cần
 import SinhVienModal from "./component/SinhVienModal.jsx";
 
 export default function SinhVienDetail() {
@@ -15,13 +16,8 @@ export default function SinhVienDetail() {
   const { id } = useParams(); 
   const navigate = useNavigate();
   
-  const { 
-    isAddingMode, // Bắt buộc lấy ra để Modal biết là đang Thêm hay Sửa
-    editingStudent,
-    setEditingStudent, 
-    handleCloseModal,
-    handleEditSubmit
-  } = useSinhVienLogic();
+  const logic = useSinhVienLogic();
+  const { chuyenNganhs } = useChuyenNganhs();
   // 2. Lấy dữ liệu từ Hook
   const { sinhViens, loading, error } = useSinhViens();
 
@@ -73,7 +69,7 @@ export default function SinhVienDetail() {
           <ArrowLeft size={16} /> Quay lại
         </button>
         <button
-          onClick={() => setEditingStudent(student)}
+          onClick={() => logic.setEditingStudent(student)}
           className="px-3 py-1 text-xl border rounded text-sm font-medium text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
           Sửa
@@ -201,10 +197,12 @@ export default function SinhVienDetail() {
       </div>
 
       <SinhVienModal 
-        isAddingMode={isAddingMode}
-        editingStudent={editingStudent}
-        onClose={handleCloseModal}
-        onEditSubmit={handleEditSubmit}
+        isAddingMode={logic.isAddingMode}
+        editingStudent={logic.editingStudent}
+        onClose={logic.handleCloseModal}
+        onAddSubmit={logic.handleAddSubmit}
+        onEditSubmit={logic.handleEditSubmit}
+        chuyenNganhs={chuyenNganhs || []} // 3. TRUYỀN DATA XUỐNG MODAL
       />
 
     </div>

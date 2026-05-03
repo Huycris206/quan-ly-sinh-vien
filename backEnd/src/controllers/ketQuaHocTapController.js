@@ -1,38 +1,63 @@
 import { KetQuaHocTap, SinhVien, LopHocPhan, MonHoc,sequelize } from "../models/index.js";
 
 export const getDiemByLopHocPhan = async (req, res) => {
-    const { lopHocPhanId } = req.params;
+    const { lopHocPhanId } = req.params; 
     try {
-        const danhSachDiem = await KetQuaHocTap.findAll({
-            where: { LOPHOCPHAN_ID: lopHocPhanId },
-            include: [{
-                model: SinhVien,
-                attributes: ['MASV', 'HOTEN']
-            }]
-        });
+        const [danhSachDiem] = await sequelize.query(
+            `SELECT * FROM [dbo].[View_BangDiemChiTiet] WHERE LOPHOCPHAN_ID = :lopHocPhanId`,
+            {
+                replacements: { lopHocPhanId: lopHocPhanId }
+            }
+        );
         return res.status(200).json({ success: true, data: danhSachDiem });
     } catch (error) {
         return res.status(500).json({ success: false, message: 'Lỗi khi lấy bảng điểm', error: error.message });
     }
 };
 
+// 2. Lấy Bảng Điểm Cá Nhân của 1 Sinh Viên (Dùng ID)
 export const getBangDiemCaNhan = async (req, res) => {
     const { sinhVienId } = req.params;
     try {
-        const bangDiem = await KetQuaHocTap.findAll({
-            where: { SINHVIEN_ID: sinhVienId },
-            include: [{
-                model: LopHocPhan,
-                attributes: ['MALOP', 'HOCKY'],
-                include: [{
-                    model: MonHoc,
-                    attributes: ['TENMONHOC', 'SOTINCHI']
-                }]
-            }]
-        });
+        const [bangDiem] = await sequelize.query(
+            `SELECT * FROM [dbo].[View_BangDiemChiTiet] WHERE SINHVIEN_ID = :sinhVienId`,
+            {
+                replacements: { sinhVienId: sinhVienId }
+            }
+        );
         return res.status(200).json({ success: true, data: bangDiem });
     } catch (error) {
         return res.status(500).json({ success: false, message: 'Lỗi khi lấy bảng điểm cá nhân', error: error.message });
+    }
+};
+
+// 3. Lấy điểm chi tiết của 1 Sinh Viên trong 1 Lớp Học Phần (Dùng ID)
+export const getDiemSinhVienTrongLop = async (req, res) => {
+    const { lopHocPhanId, sinhVienId } = req.params; 
+
+    try {
+        const [diemChiTiet] = await sequelize.query(
+            `SELECT * FROM [dbo].[View_BangDiemChiTiet] 
+             WHERE SINHVIEN_ID = :sinhVienId AND LOPHOCPHAN_ID = :lopHocPhanId`,
+            {
+                replacements: { 
+                    sinhVienId: sinhVienId, 
+                    lopHocPhanId: lopHocPhanId 
+                }
+            }
+        );
+
+        if (diemChiTiet.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Không tìm thấy kết quả học tập của sinh viên này trong lớp học phần yêu cầu.' 
+            });
+        }
+
+        return res.status(200).json({ success: true, data: diemChiTiet[0] });
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Lỗi khi lấy điểm chi tiết', error: error.message });
     }
 };
 

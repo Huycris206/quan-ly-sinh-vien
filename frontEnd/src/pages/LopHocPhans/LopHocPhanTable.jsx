@@ -32,7 +32,7 @@ const LopHocPhanTable = ({ classes, searchTerm, onEdit, onDelete }) => {
                   </td>
                   <td className="py-3 px-6 text-center">{lop.HOCKY || "---"}</td>
                   <td className="py-3 px-6 text-center">
-                    <span className="bg-muted px-2 py-1 rounded text-xs font-semibold">{lop.SISO || 0}/{lop.SISO_TOIDA || 70}</span>
+                    <span className="bg-muted px-2 py-1 rounded text-xs font-semibold">{lop.SISO || 0} / { lop.SISO_TOIDA || 70}</span>
                   </td>
                   <td className="py-3 px-6 text-center">
                     <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold shadow-sm ${

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, Outlet,Link } from "react-router-dom";
+import { NavLink, Outlet, Link } from "react-router-dom";
 import { Toaster } from "sonner";
 import { 
   LayoutDashboard, 
@@ -11,30 +11,28 @@ import {
   X, 
   Bell
 } from "lucide-react";
-import { cn } from "../../lib/utils"; // Import hàm utils ở trên
-import { useAuth } from "../../context/AuthContext"; // Import AuthContext để xử lý đăng xuất
-import LogOutBtn from "./MainLayoutComponent/logOutBtn"; // Component nút đăng xuất riêng biệt
+import { cn } from "../../lib/utils";
+import { useAuth } from "../../context/AuthContext";
+import LogOutBtn from "./MainLayoutComponent/logOutBtn";
 
-// Danh sách menu điều hướng
 const NAV_ITEMS = [
   { title: "Tổng quan", path: "/", icon: <LayoutDashboard className="w-5 h-5" /> },
   { title: "Giảng viên", path: "/giangviens", icon: <UserRoundPen className="w-5 h-5" /> },
   { title: "Sinh viên", path: "/sinhviens", icon: <Users className="w-5 h-5" /> },
   { title: "Lớp học", path: "/lophocphans", icon: <GraduationCap className="w-5 h-5" /> },
-  { title: "Cài đặt", path: "/settings", icon: <Settings className="w-5 h-5" /> },
-];  
+  { title: "Cài đặt", path: "/caidats", icon: <Settings className="w-5 h-5" /> },
+];
 
 export default function MainLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { logout } = useAuth(); // Lấy hàm logout từ AuthContext
-
+  const { logout } = useAuth();
 
   return (
     <div className="flex h-screen w-full bg-muted/40 font-geist">
       {/* 1. SIDEBAR (Desktop) */}
       <aside className="hidden w-64 flex-col border-r bg-background md:flex">
         <Link to='/'>
-          <div className="flex h-16 items-center border-b px-6" >
+          <div className="flex h-16 items-center border-b px-6">
             <GraduationCap className="mr-2 h-6 w-6 text-primary" />
             <span className="text-lg font-bold tracking-tight text-foreground">
               Student Manager
@@ -48,6 +46,7 @@ export default function MainLayout() {
               <NavLink
                 key={item.path}
                 to={item.path}
+                end={item.path === "/"}
                 className={({ isActive }) =>
                   cn(
                     "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
@@ -71,7 +70,7 @@ export default function MainLayout() {
 
       {/* 2. MAIN CONTENT AREA */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        
+
         {/* Header */}
         <header className="flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
           <div className="flex items-center md:hidden">
@@ -89,7 +88,6 @@ export default function MainLayout() {
               <Bell className="h-5 w-5" />
               <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive"></span>
             </button>
-            {/* Vùng Profile/Avatar (Có thể thay bằng DropdownMenu của Shadcn) */}
             <div className="h-8 w-8 rounded-full bg-primary/20 border flex items-center justify-center font-semibold text-sm">
               AD
             </div>
@@ -98,16 +96,15 @@ export default function MainLayout() {
 
         {/* Content Body */}
         <main className="flex-1 overflow-auto p-4 md:p-6 bg-background">
-          {/* <Outlet /> là nơi các Component con (StudentList, Dashboard...) sẽ được render */}
           <Outlet />
         </main>
       </div>
 
-      {/* 3. SIDEBAR (Mobile) - Overlay & Drawer */}
+      {/* 3. SIDEBAR (Mobile) */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">
-          <div 
-            className="fixed inset-0 bg-black/50 transition-opacity" 
+          <div
+            className="fixed inset-0 bg-black/50 transition-opacity"
             onClick={() => setIsMobileMenuOpen(false)}
           />
           <aside className="relative flex w-64 flex-col bg-background shadow-lg animate-in slide-in-from-left-0">
@@ -122,6 +119,7 @@ export default function MainLayout() {
                 <NavLink
                   key={item.path}
                   to={item.path}
+                  end={item.path === "/"}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={({ isActive }) =>
                     cn(
@@ -141,7 +139,7 @@ export default function MainLayout() {
         </div>
       )}
 
-      {/* 4. TOASTER - Component hiển thị thông báo góc màn hình */}
+      {/* 4. TOASTER */}
       <Toaster richColors position="top-right" />
     </div>
   );

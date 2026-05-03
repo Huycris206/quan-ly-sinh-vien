@@ -13,6 +13,8 @@ import GiangVienDetail from "./pages/GiangViens/GiangVienDetail.jsx";
 import ManageLopHocPhans from "./pages/LopHocPhans/ManageLopHocPhans.jsx";
 import LopHocPhanDetail from "./pages/LopHocPhans/LopHocPhanDetail.jsx";
 
+import CaiDat from "./pages/CaiDats/CaiDat.jsx";
+
 import Login from "./pages/Auth/LoginPage";
 import PrivateRoute from "./context/PrivateRoute";
 import { AuthProvider } from "./context/AuthContext";
@@ -22,15 +24,14 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          
+
           {/* Luồng Auth: Không cần đăng nhập */}
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<Login />} />
-            {/* Có thể thêm /forgot-password, /reset-password ở đây */}
           </Route>
+
           {/* Luồng Chính: Cần đăng nhập */}
           <Route element={<PrivateRoute />}>
-
             <Route element={<MainLayout />}>
 
               <Route path="/" element={<Dashboard />} />
@@ -44,13 +45,12 @@ export default function App() {
               <Route path="/lophocphans" element={<ManageLopHocPhans />} />
               <Route path="/lophocphans/:id" element={<LopHocPhanDetail />} />
 
+              <Route path="/caidats" element={<CaiDat />} />
+
             </Route>
-
           </Route>
-        
-          
 
-          {/* Catch-all: Nếu gõ link linh tinh thì đẩy về trang chủ */}
+          {/* Catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />
 
         </Routes>

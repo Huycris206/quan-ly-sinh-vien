@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { User, Lock, Bell, Palette, Save } from "lucide-react";
+import { User, Lock, Bell, Save } from "lucide-react";
 import { toast } from "sonner";
 
 const Section = ({ icon: Icon, title, children }) => (
@@ -24,7 +24,6 @@ const Field = ({ label, children }) => (
 const inputCls = "flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400";
 
 const CaiDat = () => {
-  const [theme, setTheme] = useState("light");
   const [notif, setNotif] = useState({ email: true, system: true });
 
   const handleSave = () => toast.success("Đã lưu cài đặt!");
@@ -38,7 +37,7 @@ const CaiDat = () => {
 
       <div className="max-w-2xl">
 
-        {/* Thông tin cá nhân */}
+        {/* Thông tin tài khoản */}
         <Section icon={User} title="Thông tin tài khoản">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Họ và tên">
@@ -88,25 +87,6 @@ const CaiDat = () => {
               </button>
             </div>
           ))}
-        </Section>
-
-        {/* Giao diện */}
-        <Section icon={Palette} title="Giao diện">
-          <div className="flex gap-3">
-            {["light", "dark", "system"].map((t) => (
-              <button
-                key={t}
-                onClick={() => setTheme(t)}
-                className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition-all ${
-                  theme === t
-                    ? "bg-violet-600 text-white border-violet-600"
-                    : "bg-white text-muted-foreground border-slate-200 hover:border-violet-300"
-                }`}
-              >
-                {t === "light" ? "Sáng" : t === "dark" ? "Tối" : "Hệ thống"}
-              </button>
-            ))}
-          </div>
         </Section>
 
         {/* Lưu */}

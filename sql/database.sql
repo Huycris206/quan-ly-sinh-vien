@@ -201,25 +201,35 @@ GO
 ALTER TABLE [dbo].[KETQUAHOCTAP] ADD CHECK ([DIEMTONGKET] >= 0.0 AND [DIEMTONGKET] <= 10.0)
 GO
 
+-- ==========================================
+-- THÊM DỮ LIỆU MẪU
+-- ==========================================
+
+-- 1. Thêm Ngành
 INSERT INTO [dbo].[NGANH] (TENNGANH)
 VALUES (N'Công nghệ thông tin'), (N'Kỹ thuật phần mềm');
 
+-- 2. Thêm Chuyên ngành
 INSERT INTO [dbo].[CHUYENNGANH] (TENCHUYENNGANH, NGANH_ID)
 SELECT N'Lập trình ứng dụng', ID FROM [dbo].[NGANH] WHERE TENNGANH = N'Công nghệ thông tin';
 
 INSERT INTO [dbo].[CHUYENNGANH] (TENCHUYENNGANH, NGANH_ID)
 SELECT N'Kỹ thuật hệ thống', ID FROM [dbo].[NGANH] WHERE TENNGANH = N'Kỹ thuật phần mềm';
 
+-- 3. Thêm Tài khoản
 INSERT INTO [dbo].[TAIKHOAN] (TENDANGNHAP, MATKHAU, VAITRO)
 VALUES 
+(N'admin', N'123456', N'quantri'),
 (N'gv001', N'123456', N'giangvien'), 
 (N'gv002', N'123456', N'giangvien'),
 (N'sv001', N'123456', N'sinhvien'), 
 (N'sv002', N'123456', N'sinhvien');
 
+-- 4. Thêm Môn học
 INSERT INTO [dbo].[MONHOC] (TENMONHOC, SOTINCHI)
-VALUES (N'Lap Trinh Web', 3), (N'Co So Du Lieu', 3), (N'Mang May Tinh', 2);
+VALUES (N'Lập trình Web', 3), (N'Cơ sở dữ liệu', 3), (N'Mạng máy tính', 2);
 
+-- 5. Thêm Giảng viên & Sinh viên
 DECLARE @idGV1 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[TAIKHOAN] WHERE TENDANGNHAP = N'gv001');
 DECLARE @idGV2 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[TAIKHOAN] WHERE TENDANGNHAP = N'gv002');
 DECLARE @idSV1 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[TAIKHOAN] WHERE TENDANGNHAP = N'sv001');
@@ -236,20 +246,17 @@ INSERT INTO [dbo].[SINHVIEN] (HOTEN, GIOITINH, KHOAHOC, CHUYENNGANH_ID, TRANGTHA
 VALUES (N'Lê Văn Cường', N'Nam', N'2023', @idCN, N'DangHoc', @idSV1, N'001111111111');
 
 INSERT INTO [dbo].[SINHVIEN] (HOTEN, GIOITINH, KHOAHOC, CHUYENNGANH_ID, TRANGTHAI, TAIKHOAN_ID, CCCD)
-VALUES (N'Nguyễn Thị Dung', N'Nữ', N'2023',@idCN, N'DangHoc', @idSV2, N'001111111112');
+VALUES (N'Nguyễn Thị Dung', N'Nữ', N'2023', @idCN, N'DangHoc', @idSV2, N'001111111112');
 
-DECLARE @idGV1 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[TAIKHOAN] WHERE TENDANGNHAP = N'gv001');
-DECLARE @idGV2 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[TAIKHOAN] WHERE TENDANGNHAP = N'gv002');
-
+-- 6. Thêm Lớp học phần
 DECLARE @idGiangVien1 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[GIANGVIEN] WHERE TAIKHOAN_ID = @idGV1);
 DECLARE @idGiangVien2 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[GIANGVIEN] WHERE TAIKHOAN_ID = @idGV2);
-
 DECLARE @idMH1 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[MONHOC] WHERE TENMONHOC = N'Lập trình Web');
 DECLARE @idMH2 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[MONHOC] WHERE TENMONHOC = N'Cơ sở dữ liệu');
 DECLARE @idMH3 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[MONHOC] WHERE TENMONHOC = N'Mạng máy tính');
 
-INSERT INTO [dbo].[LOPHOCPHAN] (MONHOC_ID, GIANGVIEN_ID, HOCKY, SISO_TOIDA, TRANGTHAI)
+INSERT INTO [dbo].[LOPHOCPHAN] (MALOP, MONHOC_ID, GIANGVIEN_ID, HOCKY, SISO_TOIDA, TRANGTHAI)
 VALUES 
-(@idMH1, @idGiangVien1, N'2024-1', 40, N'Mo'),
-(@idMH2, @idGiangVien1, N'2024-1', 35, N'Mo'),
-(@idMH3, @idGiangVien2, N'2024-1', 30, N'Mo');
+(N'AUTO-GEN', @idMH1, @idGiangVien1, N'2024-1', 40, N'Mo'),
+(N'AUTO-GEN', @idMH2, @idGiangVien1, N'2024-1', 35, N'Mo'),
+(N'AUTO-GEN', @idMH3, @idGiangVien2, N'2024-1', 30, N'Mo');

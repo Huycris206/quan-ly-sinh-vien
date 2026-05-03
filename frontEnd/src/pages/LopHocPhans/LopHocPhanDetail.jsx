@@ -1,7 +1,8 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { useLopHocPhans } from "../../hooks/useLopHocPhans"; // Check lại đường dẫn
+import { useLopHocPhans } from "../../hooks/useLopHocPhans"; 
+import { useKetQuaHocTap } from "@/hooks/useKetQuaHocTap"; // Import hook quản lý điểm
 import Loadingcomp from "@/components/ui/Loading.jsx";
 import { 
   ArrowLeft, BookOpen, UserCircle, 
@@ -12,24 +13,37 @@ import SinhVienLopManager from "./SinhVienLopManager";
 export default function LopHocPhanDetail() {
   const { id } = useParams(); 
   const navigate = useNavigate();
-  const [sinhViens, setSinhViens] = useState([]);
-  const [loadingSV, setLoadingSV] = useState(false);
-
-  const { lopHocPhans, loading, error, fetchSinhViensByLopHocPhan,dangKyLopHocPhan  } = useLopHocPhans();
-
-  const lopHocPhan = lopHocPhans.find((lop) => lop.MALOP?.toLowerCase() === id?.toLowerCase());
   
+  // Xóa bỏ state sinhViens cũ, thay bằng state danhSachDiem
+  const [danhSachDiem, setDanhSachDiem] = useState([]); 
+  const [loadingData, setLoadingData] = useState(false);
 
-  const loadSinhViens = async () => {
+  // Hook lấy thông tin Lớp Học Phần
+  const { lopHocPhans, loading, error } = useLopHocPhans();
+  
+  // Hook lấy và quản lý Điểm
+  const { fetchDiemByLopHocPhan } = useKetQuaHocTap();
+
+  // Tìm lớp học phần hiện tại từ danh sách
+  const lopHocPhan = lopHocPhans.find((lop) => lop.MALOP?.toLowerCase() === id?.toLowerCase());
+
+  // Hàm load danh sách bảng điểm
+  const loadDanhSachDiem = async () => {
       if (!lopHocPhan?.ID) return;
-      setLoadingSV(true);
-      const data = await fetchSinhViensByLopHocPhan(lopHocPhan.ID);
-      setSinhViens(data);
-      setLoadingSV(false);
+      
+      setLoadingData(true);
+      // Gọi hook để lấy danh sách từ View_BangDiemChiTiet
+      const data = await fetchDiemByLopHocPhan(lopHocPhan.ID);
+      
+      // Đảm bảo data luôn là mảng, phòng trường hợp null/undefined
+      setDanhSachDiem(data || []); 
+      setLoadingData(false);
   };
 
+  // Tự động load danh sách điểm khi tìm thấy lớp học phần
   useEffect(() => {
-    loadSinhViens();
+    loadDanhSachDiem();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lopHocPhan]);
 
   // =================== RENDER TRẠNG THÁI ===================
@@ -147,15 +161,14 @@ export default function LopHocPhanDetail() {
           </div>
         </div>
 
-        {/* CỘT PHẢI: Danh sách sinh viên CÓ THANH TRƯỢT */}
+        {/* CỘT PHẢI: Danh sách sinh viên và bảng điểm */}
         <div className="lg:col-span-2">
           <SinhVienLopManager 
             lopHocPhanId={lopHocPhan.ID}
-            sinhViensDanhSach={sinhViens}
-            loadingSV={loadingSV}
+            danhSachDiem={danhSachDiem} // Sửa tên prop cho khớp với file SinhVienLopManager
+            loadingData={loadingData}
             sisoToiDa={lopHocPhan.SISO_TOIDA}
-            onRefresh={loadSinhViens} // Hàm này sẽ chạy lại khi Popup báo Thêm thành công
-            dangKyLopHocPhan={dangKyLopHocPhan} 
+            onRefresh={loadDanhSachDiem} 
           />
         </div>
 

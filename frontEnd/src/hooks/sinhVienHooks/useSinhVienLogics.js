@@ -47,6 +47,8 @@ export const useSinhVienLogic = () => {
     
     // Nếu sửa thành công thì đóng Form
     if (isSuccess) setEditingStudent(null);
+    refetch();
+     // Tải lại dữ liệu mới nhất sau khi cập nhật
   };
 
   const handleCloseModal = () => {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useGiangViens } from "@/hooks/useGiangViens";
+import { Link } from "react-router-dom";
 import Loadingcomp from "@/components/ui/Loading.jsx";
 import { 
   ArrowLeft, Phone, Calendar, 
@@ -149,29 +150,31 @@ export default function GiangVienDetail() {
         ) : classesTaught.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {classesTaught.map((lop) => (
-              <div 
-                key={lop.LOPHOCPHAN_ID} 
-                className="border border-border rounded-lg p-4 hover:border-primary/50 hover:shadow-sm transition-all bg-card"
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-bold text-foreground line-clamp-1" title={lop.TENMONHOC}>
-                    {lop.TENMONHOC}
-                  </h4>
-                  <span className={`text-xs font-medium px-2 py-1 rounded ${
-                      lop.TRANGTHAI_LOP === 'Mo' ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'
-                  }`}>
-                    {lop.MALOP}
-                  </span>
+              <Link to={`/lophocphans/${lop.MALOP}` } className="block">
+                <div 
+                  key={lop.LOPHOCPHAN_ID} 
+                  className="border border-border rounded-lg p-4 hover:border-primary/50 hover:shadow-sm transition-all bg-card"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-bold text-foreground line-clamp-1" title={lop.TENMONHOC}>
+                      {lop.TENMONHOC}
+                    </h4>
+                    <span className={`text-xs font-medium px-2 py-1 rounded ${
+                        lop.TRANGTHAI_LOP === 'Mo' ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {lop.MALOP}
+                    </span>
+                  </div>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p>Học kỳ: <strong className="text-foreground">{lop.HOCKY}</strong></p>
+                    <p>Tín chỉ: {lop.SOTINCHI}</p>
+                    <p>Sĩ số: <strong className="text-foreground">{lop.SISO || 0} / {lop.SISO_TOIDA}</strong></p>
+                    
+                    {/* Nếu bạn dùng cái View nâng cao có gộp lịch học thì mở comment dòng dưới ra */}
+                    {/* {lop.THOIKHOABIEU && <p className="pt-2 mt-2 border-t text-xs">Lịch: {lop.THOIKHOABIEU}</p>} */}
+                  </div>
                 </div>
-                <div className="text-sm text-muted-foreground space-y-1">
-                  <p>Học kỳ: <strong className="text-foreground">{lop.HOCKY}</strong></p>
-                  <p>Tín chỉ: {lop.SOTINCHI}</p>
-                  <p>Sĩ số: <strong className="text-foreground">{lop.SISO || 0} / {lop.SISO_TOIDA}</strong></p>
-                  
-                  {/* Nếu bạn dùng cái View nâng cao có gộp lịch học thì mở comment dòng dưới ra */}
-                  {/* {lop.THOIKHOABIEU && <p className="pt-2 mt-2 border-t text-xs">Lịch: {lop.THOIKHOABIEU}</p>} */}
-                </div>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (

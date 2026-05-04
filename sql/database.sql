@@ -201,35 +201,26 @@ GO
 ALTER TABLE [dbo].[KETQUAHOCTAP] ADD CHECK ([DIEMTONGKET] >= 0.0 AND [DIEMTONGKET] <= 10.0)
 GO
 
--- ==========================================
--- THÊM DỮ LIỆU MẪU
--- ==========================================
+INSERT INTO [dbo].[TAIKHOAN] (TENDANGNHAP, MATKHAU, VAITRO)
+VALUES 
+(N'admin', N'$2b$10$gDRerzenXlcjCQqM6jXDGuI8LVLC7pMWrU9.j8wyXxZb1FGL5V6uK', N'quantri'),
+(N'gv001', N'$2b$10$gDRerzenXlcjCQqM6jXDGuI8LVLC7pMWrU9.j8wyXxZb1FGL5V6uK', N'giangvien'), 
+(N'gv002', N'$2b$10$gDRerzenXlcjCQqM6jXDGuI8LVLC7pMWrU9.j8wyXxZb1FGL5V6uK', N'giangvien'),
+(N'sv001', N'$2b$10$gDRerzenXlcjCQqM6jXDGuI8LVLC7pMWrU9.j8wyXxZb1FGL5V6uK', N'sinhvien'), 
+(N'sv002', N'$2b$10$gDRerzenXlcjCQqM6jXDGuI8LVLC7pMWrU9.j8wyXxZb1FGL5V6uK', N'sinhvien');
 
--- 1. Thêm Ngành
 INSERT INTO [dbo].[NGANH] (TENNGANH)
 VALUES (N'Công nghệ thông tin'), (N'Kỹ thuật phần mềm');
 
--- 2. Thêm Chuyên ngành
 INSERT INTO [dbo].[CHUYENNGANH] (TENCHUYENNGANH, NGANH_ID)
 SELECT N'Lập trình ứng dụng', ID FROM [dbo].[NGANH] WHERE TENNGANH = N'Công nghệ thông tin';
 
 INSERT INTO [dbo].[CHUYENNGANH] (TENCHUYENNGANH, NGANH_ID)
 SELECT N'Kỹ thuật hệ thống', ID FROM [dbo].[NGANH] WHERE TENNGANH = N'Kỹ thuật phần mềm';
 
--- 3. Thêm Tài khoản
-INSERT INTO [dbo].[TAIKHOAN] (TENDANGNHAP, MATKHAU, VAITRO)
-VALUES 
-(N'admin', N'123456', N'quantri'),
-(N'gv001', N'123456', N'giangvien'), 
-(N'gv002', N'123456', N'giangvien'),
-(N'sv001', N'123456', N'sinhvien'), 
-(N'sv002', N'123456', N'sinhvien');
-
--- 4. Thêm Môn học
 INSERT INTO [dbo].[MONHOC] (TENMONHOC, SOTINCHI)
 VALUES (N'Lập trình Web', 3), (N'Cơ sở dữ liệu', 3), (N'Mạng máy tính', 2);
 
--- 5. Thêm Giảng viên & Sinh viên
 DECLARE @idGV1 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[TAIKHOAN] WHERE TENDANGNHAP = N'gv001');
 DECLARE @idGV2 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[TAIKHOAN] WHERE TENDANGNHAP = N'gv002');
 DECLARE @idSV1 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[TAIKHOAN] WHERE TENDANGNHAP = N'sv001');
@@ -248,7 +239,6 @@ VALUES (N'Lê Văn Cường', N'Nam', N'2023', @idCN, N'DangHoc', @idSV1, N'0011
 INSERT INTO [dbo].[SINHVIEN] (HOTEN, GIOITINH, KHOAHOC, CHUYENNGANH_ID, TRANGTHAI, TAIKHOAN_ID, CCCD)
 VALUES (N'Nguyễn Thị Dung', N'Nữ', N'2023', @idCN, N'DangHoc', @idSV2, N'001111111112');
 
--- 6. Thêm Lớp học phần
 DECLARE @idGiangVien1 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[GIANGVIEN] WHERE TAIKHOAN_ID = @idGV1);
 DECLARE @idGiangVien2 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[GIANGVIEN] WHERE TAIKHOAN_ID = @idGV2);
 DECLARE @idMH1 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[MONHOC] WHERE TENMONHOC = N'Lập trình Web');

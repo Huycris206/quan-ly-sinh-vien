@@ -7,7 +7,7 @@ INSTEAD OF INSERT
 AS
 BEGIN
     DECLARE @SinhVienId UNIQUEIDENTIFIER, @LopHocPhanId UNIQUEIDENTIFIER, @MonHocId UNIQUEIDENTIFIER;
-    DECLARE @SiSoHienTai INT, @SiSoToiDa INT, @TrangThaiLop VARCHAR(20), @HocKy VARCHAR(20);
+    DECLARE @SiSoHienTai INT, @SiSoToiDa INT, @TrangThaiLop VARCHAR(20), @HocKy VARCHAR(20) ,@TrangThaiSinhVien VARCHAR(20);
     DECLARE @SoMonTienQuyetChuaDat INT = 0;
     DECLARE @SoLuongTrungLich INT = 0;
 
@@ -20,6 +20,17 @@ BEGIN
         @MonHocId = MONHOC_ID,
         @HocKy = HOCKY 
     FROM [dbo].[LOPHOCPHAN] WHERE ID = @LopHocPhanId;
+
+    SELECT
+        @TrangThaiSinhVien = TRANGTHAI
+    FROM [dbo].[SINHVIEN] WHERE ID = @SinhVienId;
+
+     -- Bắt lỗi 0: Sinh viên không được phép đăng ký
+    IF (@TrangThaiSinhVien != 'DangHoc')
+    BEGIN
+        RAISERROR (N'Lỗi: Sinh viên không được phép đăng ký học phần!', 16, 1);
+        ROLLBACK TRANSACTION; RETURN;
+    END
 
     -- Bắt lỗi 1: Lớp không mở
     IF (@TrangThaiLop != 'Mo')
@@ -84,5 +95,8 @@ BEGIN
     -- Hợp lệ -> Tiến hành chèn dữ liệu
     INSERT INTO [dbo].[KETQUAHOCTAP] (SINHVIEN_ID, LOPHOCPHAN_ID, TRANGTHAI_DANGKY)
     SELECT SINHVIEN_ID, LOPHOCPHAN_ID, 'ThanhCong' FROM inserted;
+    UPDATE [dbo].[LOPHOCPHAN]
+    SET SISO = SISO + 1
+    WHERE ID = @LopHocPhanId;
 END
 GO

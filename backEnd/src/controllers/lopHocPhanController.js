@@ -1,14 +1,14 @@
-import { LopHocPhan, MonHoc, GiangVien ,sequelize} from "../models/index.js";
+import { LopHocPhan, MonHoc, GiangVien, sequelize } from "../models/index.js";
 
 export const getAllLopHocPhan = async (req, res) => {
     try {
         const lopHocPhanList = await LopHocPhan.findAll({ 
             where: { DAXOA: false },
-            // Nên include thêm thông tin Môn học và Giảng viên để frontend dễ hiển thị
             include: [
                 { model: MonHoc, attributes: ['TENMONHOC', 'SOTINCHI'] },
-                { model: GiangVien, attributes: ['HOTEN'] }
-            ]
+                { model: GiangVien, attributes: ['HOTEN', 'MAGV'] }
+            ],
+            order: [['NGAYTAO', 'DESC']] // Sắp xếp lớp mới tạo lên đầu
         });
 
         return res.status(200).json({
@@ -31,7 +31,7 @@ export const getLopHocPhanById = async (req, res) => {
             where: { ID: id, DAXOA: false },
             include: [
                 { model: MonHoc, attributes: ['TENMONHOC', 'SOTINCHI'] },
-                { model: GiangVien, attributes: ['HOTEN'] }
+                { model: GiangVien, attributes: ['HOTEN', 'MAGV'] }
             ]
         });
 
@@ -55,72 +55,66 @@ export const getLopHocPhanById = async (req, res) => {
     } 
 };
 
-export const createLopHocPhan = async (req, res) => {
+export const createLopHocPhan = async (req, res) => { 
+    const { MONHOC_ID, GIANGVIEN_ID, SISO_TOIDA, TRANGTHAI } = req.body;
+    
     try {
-        const { MONHOC_ID, GIANGVIEN_ID, SISO_TOIDA, TRANGTHAI } = req.body;
-
         if (!MONHOC_ID) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Vui lòng chọn Môn học cho lớp này!' 
-            });
+            return res.status(400).json({ success: false, message: 'Vui lòng chọn Môn học!' });
         }
 
-        // 1. Gọi SP thêm Lớp học phần
-        const [resultSP] = await sequelize.query(
+        // Xử lý giảng viên rỗng và parse số lượng
+        const giangVienId = (GIANGVIEN_ID === "" || !GIANGVIEN_ID) ? null : GIANGVIEN_ID;
+        const siSoMax = SISO_TOIDA ? parseInt(SISO_TOIDA, 10) : 70;
+
+        // 1. Gọi thẳng Stored Procedure từ Database
+        const [results] = await sequelize.query(
             `EXEC [dbo].[PRO_THEM_LOPHOCPHAN] 
-                @P_MONHOC_ID = :monhoc_id,
-                @P_GIANGVIEN_ID = :giangvien_id,
-                @P_SISO_TOIDA = :siso,
-                @P_TRANGTHAI = :trangthai`,
+                @P_MONHOC_ID = :monHocId, 
+                @P_GIANGVIEN_ID = :gvId, 
+                @P_SISO_TOIDA = :siSoMax, 
+                @P_TRANGTHAI = :trangThai`,
             {
                 replacements: {
-                    monhoc_id: MONHOC_ID,
-                    giangvien_id: GIANGVIEN_ID || null, // Nếu rỗng thì truyền null
-                    siso: SISO_TOIDA || 70,             // Mặc định 70 nếu client không gửi
-                    trangthai: TRANGTHAI || 'Mo'        // Mặc định 'Mo'
+                    monHocId: MONHOC_ID,
+                    gvId: giangVienId,
+                    siSoMax: siSoMax,
+                    trangThai: TRANGTHAI || 'Mo'
                 }
             }
         );
 
-        const spResponse = resultSP[0];
+        const spResult = results[0];
 
-        // 2. Xử lý lỗi (Môn học không tồn tại...)
-        if (spResponse && spResponse.StatusCode === 400) {
-            return res.status(400).json({
-                success: false,
-                message: spResponse.Message
-            });
+        // Xử lý các mã lỗi Database trả về
+        if (spResult.StatusCode === 400) {
+            return res.status(400).json({ success: false, message: spResult.Message });
+        }
+        if (spResult.StatusCode === 500) {
+            return res.status(500).json({ success: false, message: spResult.Message });
         }
 
-        if (spResponse && spResponse.StatusCode === 500) {
-            throw new Error(spResponse.Message);
-        }
-
-        // 3. Tìm lại dòng dữ liệu bằng cái NewId mà SP trả về
-        const newClassId = spResponse.NewId;
-
-        const newLopHocPhan = await LopHocPhan.findOne({
-            where: { ID: newClassId, DAXOA: false },
+        // 2. Nếu thành công (StatusCode = 200), ta lấy NewId để query lại bản ghi vừa tạo
+        const actualLopHocPhan = await LopHocPhan.findOne({
+            where: { ID: spResult.NewId },
             include: [
                 { model: MonHoc, attributes: ['TENMONHOC', 'SOTINCHI'] },
-                { model: GiangVien, attributes: ['MAGV', 'HOTEN'] }
+                { model: GiangVien, attributes: ['HOTEN', 'MAGV'] }
             ]
         });
 
-        // Trả về Frontend. Lúc này Frontend sẽ nhận được MALOP xịn (VD: LHP260001) 
-        // và HOCKY xịn (VD: HK-2-2026) do Trigger vừa tính toán.
+        // 3. Trả về cho React hiển thị lên giao diện
         return res.status(201).json({
             success: true,
-            message: spResponse.Message,
-            data: newLopHocPhan
+            message: spResult.Message,
+            data: actualLopHocPhan
         });
 
     } catch (error) {
         console.error("=== LỖI THÊM LỚP HỌC PHẦN ===", error);
         return res.status(500).json({
             success: false,
-            message: 'Lỗi hệ thống khi thêm lớp học phần',
+            message: 'Lỗi hệ thống trong quá trình xử lý',
             error: error.message
         });
     }
@@ -128,10 +122,11 @@ export const createLopHocPhan = async (req, res) => {
 
 export const updateLopHocPhan = async (req, res) => {
     const { id } = req.params;
-    const updateData = req.body;
+    // Tách riêng các trường cho phép cập nhật (Không cho phép người dùng sửa MALOP và HOCKY)
+    const { MONHOC_ID, GIANGVIEN_ID, SISO_TOIDA, TRANGTHAI } = req.body; 
     
     try {
-        const lopHocPhan = await LopHocPhan.findOne({ where: { Id: id, IsDeleted: false } });
+        const lopHocPhan = await LopHocPhan.findOne({ where: { ID: id, DAXOA: false } });
         
         if (!lopHocPhan) {
             return res.status(404).json({
@@ -140,19 +135,33 @@ export const updateLopHocPhan = async (req, res) => {
             });
         }
        
-        await lopHocPhan.update(updateData);
+        // Chỉ update những trường cần thiết
+        await lopHocPhan.update({
+            ...(MONHOC_ID && { MONHOC_ID }),
+            ...(GIANGVIEN_ID !== undefined && { GIANGVIEN_ID }),
+            ...(SISO_TOIDA && { SISO_TOIDA }),
+            ...(TRANGTHAI && { TRANGTHAI })
+        });
+
+        // Fetch lại data kèm thông tin Môn và Giảng viên để front-end hiển thị đồng bộ
+        const updatedLopHocPhan = await LopHocPhan.findOne({
+            where: { ID: id },
+            include: [
+                { model: MonHoc, attributes: ['TENMONHOC', 'SOTINCHI'] },
+                { model: GiangVien, attributes: ['HOTEN', 'MAGV'] }
+            ]
+        });
 
         return res.status(200).json({
             success: true,  
             message: 'Cập nhật Lớp học phần thành công',
-            data: lopHocPhan
+            data: updatedLopHocPhan
         });
     } catch (error) {
         return res.status(500).json({
             success: false,
             message: 'Lỗi khi cập nhật Lớp học phần',
-            error: error.message,
-            data: updateData
+            error: error.message
         });
     }
 };
@@ -160,7 +169,7 @@ export const updateLopHocPhan = async (req, res) => {
 export const deleteLopHocPhan = async (req, res) => {
     const { id } = req.params;
     try {
-        const lopHocPhan = await LopHocPhan.findOne({ where: { Id: id, IsDeleted: false } });
+        const lopHocPhan = await LopHocPhan.findOne({ where: { ID: id, DAXOA: false } });
         
         if (!lopHocPhan) {    
             return res.status(404).json({
@@ -169,7 +178,7 @@ export const deleteLopHocPhan = async (req, res) => {
             });
         }
 
-        lopHocPhan.IsDeleted = true;
+        lopHocPhan.DAXOA = true;
         await lopHocPhan.save();
 
         return res.status(200).json({
@@ -180,6 +189,39 @@ export const deleteLopHocPhan = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: 'Lỗi khi xóa Lớp học phần',
+            error: error.message
+        });
+    }
+};
+
+export const getSinhVienByLopView = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const [results] = await sequelize.query(
+            `SELECT * FROM [dbo].[View_DanhSachSinhVien_TheoLop] 
+             WHERE LOPHOCPHAN_ID = :idLop`,
+            {
+                replacements: { idLop: id }
+            }
+        );
+
+        if (!results || results.length === 0) {
+            return res.status(200).json({ 
+                success: true,
+                message: 'Lớp này chưa có sinh viên nào đăng ký.',
+                data: [] // Trả về mảng rỗng thay vì báo lỗi
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: results
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Lỗi khi lấy danh sách sinh viên từ View',
             error: error.message
         });
     }

@@ -1,159 +1,174 @@
-import { KetQuaHocTap, SinhVien, LopHocPhan, MonHoc, sequelize } from "../models/index.js";
+import { KetQuaHocTap, SinhVien, LopHocPhan, MonHoc,sequelize } from "../models/index.js";
 
 export const getDiemByLopHocPhan = async (req, res) => {
-    const { lopHocPhanId } = req.params;
+    const { lopHocPhanId } = req.params; 
     try {
-        const danhSachDiem = await KetQuaHocTap.findAll({
-            where: { LOPHOCPHAN_ID: lopHocPhanId },
-            include: [{
-                model: SinhVien,
-                attributes: ['MASV', 'HOTEN']
-            }]
-        });
+        const [danhSachDiem] = await sequelize.query(
+            `SELECT * FROM [dbo].[View_BangDiemChiTiet] WHERE LOPHOCPHAN_ID = :lopHocPhanId`,
+            {
+                replacements: { lopHocPhanId: lopHocPhanId }
+            }
+        );
         return res.status(200).json({ success: true, data: danhSachDiem });
     } catch (error) {
         return res.status(500).json({ success: false, message: 'Lỗi khi lấy bảng điểm', error: error.message });
     }
 };
-export const getAllKetQuaHocTap = async (req, res) => {
-    try {
-        const ketQuaHocTapList = await KetQuaHocTap.findAll({
-            include: [{
-                model: SinhVien,
-                attributes: ['MASV', 'HOTEN']
-            }, {
-                model: LopHocPhan,
-                attributes: ['MALOP', 'HOCKY'],
-                include: [{
-                    model: MonHoc,
-                    attributes: ['TENMONHOC', 'SOTINCHI']
-                }]
-            }]
-        });
-        return res.status(200).json({ success: true, data: ketQuaHocTapList });
-    } catch (error) {
-        return res.status(500).json({ success: false, message: 'Lỗi khi lấy kết quả học tập', error: error.message });
-    }
-};
 
+// 2. Lấy Bảng Điểm Cá Nhân của 1 Sinh Viên (Dùng ID)
 export const getBangDiemCaNhan = async (req, res) => {
     const { sinhVienId } = req.params;
     try {
-        const bangDiem = await KetQuaHocTap.findAll({
-            where: { SINHVIEN_ID: sinhVienId },
-            include: [{
-                model: LopHocPhan,
-                attributes: ['MALOP', 'HOCKY'],
-                include: [{
-                    model: MonHoc,
-                    attributes: ['TENMONHOC', 'SOTINCHI']
-                }]
-            }]
-        });
+        const [bangDiem] = await sequelize.query(
+            `SELECT * FROM [dbo].[View_BangDiemChiTiet] WHERE SINHVIEN_ID = :sinhVienId`,
+            {
+                replacements: { sinhVienId: sinhVienId }
+            }
+        );
         return res.status(200).json({ success: true, data: bangDiem });
     } catch (error) {
         return res.status(500).json({ success: false, message: 'Lỗi khi lấy bảng điểm cá nhân', error: error.message });
     }
 };
 
+// 3. Lấy điểm chi tiết của 1 Sinh Viên trong 1 Lớp Học Phần (Dùng ID)
+export const getDiemSinhVienTrongLop = async (req, res) => {
+    const { lopHocPhanId, sinhVienId } = req.params; 
 
-export const dangKyHocPhan = async (req, res) => {
     try {
-        // 1. Lấy 2 ID từ Client gửi lên
-        const { SINHVIEN_ID, LOPHOCPHAN_ID } = req.body;
-
-        // Bắt lỗi cơ bản nếu Front-end gửi thiếu data
-        if (!SINHVIEN_ID || !LOPHOCPHAN_ID) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Thiếu thông tin Sinh viên hoặc Lớp học phần!' 
-            });
-        }
-
-        // 2. Gọi Stored Procedure
-        const [resultSP] = await sequelize.query(
-            `EXEC [dbo].[PRO_DANGKY_HOCPHAN] 
-                @P_SINHVIEN_ID = :sinhvien_id, 
-                @P_LOPHOCPHAN_ID = :lophocphan_id`,
+        const [diemChiTiet] = await sequelize.query(
+            `SELECT * FROM [dbo].[View_BangDiemChiTiet] 
+             WHERE SINHVIEN_ID = :sinhVienId AND LOPHOCPHAN_ID = :lopHocPhanId`,
             {
-                replacements: {
-                    sinhvien_id: SINHVIEN_ID,
-                    lophocphan_id: LOPHOCPHAN_ID
+                replacements: { 
+                    sinhVienId: sinhVienId, 
+                    lopHocPhanId: lopHocPhanId 
                 }
-                // Bỏ qua type: QueryTypes.RAW để lấy thẳng mảng kết quả
             }
         );
 
-        // 3. Đọc kết quả từ SQL Server gửi lên
-        const spResponse = resultSP[0]; // Lấy dòng dữ liệu đầu tiên
-
-        // Nếu Trigger dưới DB báo lỗi (sĩ số đầy, trùng môn, chưa học tiên quyết...)
-        if (spResponse && spResponse.StatusCode === 400) {
-            return res.status(400).json({
-                success: false,
-                message: spResponse.Message // Sẽ trả đúng câu lỗi bạn viết trong SQL
+        if (diemChiTiet.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Không tìm thấy kết quả học tập của sinh viên này trong lớp học phần yêu cầu.' 
             });
         }
 
-        // 4. Nếu thành công (StatusCode = 200)
-        return res.status(200).json({
-            success: true,
-            message: spResponse.Message // "Đăng ký học phần thành công!"
+        return res.status(200).json({ success: true, data: diemChiTiet[0] });
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: 'Lỗi khi lấy điểm chi tiết', error: error.message });
+    }
+};
+
+export const updateDiemSinhVien = async (req, res) => {
+    // Chỉ lấy các tham số đầu vào cần thiết cho SP
+    const { SINHVIEN_ID, LOPHOCPHAN_ID, DIEMCHUYENCAN, DIEMGIUAKY, DIEMCUOIKY } = req.body;
+
+    try {
+        // Thực thi Stored Procedure bằng Raw Query
+        const [results] = await sequelize.query(
+            `EXEC [dbo].[PRO_NHAP_DIEM] 
+                @P_SINHVIEN_ID = :sinhVienId, 
+                @P_LOPHOCPHAN_ID = :lopHocPhanId, 
+                @P_DIEM_CC = :diemCC, 
+                @P_DIEM_GK = :diemGK, 
+                @P_DIEM_CK = :diemCK`,
+            {
+                replacements: {
+                    sinhVienId: SINHVIEN_ID,
+                    lopHocPhanId: LOPHOCPHAN_ID,
+                    diemCC: DIEMCHUYENCAN,
+                    diemGK: DIEMGIUAKY,
+                    diemCK: DIEMCUOIKY
+                }
+            }
+        );
+
+        // SP của bạn trả về bảng qua lệnh SELECT (StatusCode, Message)
+        // Trong Sequelize, kết quả trả về của SELECT qua SP sẽ nằm ở phần tử đầu tiên
+        const spResult = results[0];
+
+        // Dựa vào StatusCode từ Database gửi lên để trả về HTTP Status tương ứng
+        if (spResult.StatusCode === 200) {
+            return res.status(200).json({
+                success: true,
+                message: spResult.Message
+            });
+        } 
+        
+        if (spResult.StatusCode === 404) {
+            return res.status(404).json({
+                success: false,
+                message: spResult.Message
+            });
+        }
+
+        // Trường hợp lỗi 500 do khối CATCH trong SQL bắt được
+        return res.status(500).json({
+            success: false,
+            message: spResult.Message
         });
 
     } catch (error) {
-        // Lỗi này chỉ xảy ra khi sập mạng, lỗi kết nối DB, hoặc sai tên SP
-        console.error("=== LỖI HỆ THỐNG ===", error);
+        // Bắt lỗi trong trường hợp không gọi được Database (sai tên SP, mất kết nối, v.v.)
         return res.status(500).json({
             success: false,
-            message: 'Lỗi hệ thống khi đăng ký học phần',
+            message: 'Lỗi hệ thống khi gọi Stored Procedure',
             error: error.message
         });
     }
 };
-export const nhapDiemHocPhan = async (req, res) => {
+export const dangKyMonHoc = async (req, res) => {
+    // Lấy ID sinh viên và ID lớp học phần từ request body
+    const { SINHVIEN_ID, LOPHOCPHAN_ID } = req.body;
+
+    // Kiểm tra nhanh dữ liệu đầu vào
+    if (!SINHVIEN_ID || !LOPHOCPHAN_ID) {
+        return res.status(400).json({
+            success: false,
+            message: 'Vui lòng cung cấp đầy đủ mã sinh viên và mã lớp học phần!'
+        });
+    }
+
     try {
-        const { SINHVIEN_ID, LOPHOCPHAN_ID, DIEMCHUYENCAN=null, DIEMGIUAKY=null, DIEMCUOIKY=null } = req.body;   
-        if (!SINHVIEN_ID || !LOPHOCPHAN_ID) {
-            return res.status(400).json({ 
-                success: false,
-                message: 'Thiếu thông tin Sinh viên hoặc Lớp học phần!'
-            });
-        }
-        const [resultSP] = await sequelize.query(
-            `EXEC [dbo].[PRO_NHAP_DIEM] 
-                @P_SINHVIEN_ID = :sinhvien_id,
-                @P_LOPHOCPHAN_ID = :lophocphan_id,
-                @P_DIEM_CC = :diemchuyencan,  
-                @P_DIEM_GK = :diemgiuaky,     
-                @P_DIEM_CK = :diemcuoiky`,    
+        // Gọi Stored Procedure xử lý logic đăng ký
+        const [results] = await sequelize.query(
+            `EXEC [dbo].[PRO_DANGKY_HOCPHAN] 
+                @P_SINHVIEN_ID = :sinhVienId, 
+                @P_LOPHOCPHAN_ID = :lopHocPhanId`,
             {
                 replacements: {
-                    sinhvien_id: SINHVIEN_ID,
-                    lophocphan_id: LOPHOCPHAN_ID,
-                    diemchuyencan: DIEMCHUYENCAN, 
-                    diemgiuaky: DIEMGIUAKY,
-                    diemcuoiky: DIEMCUOIKY
+                    sinhVienId: SINHVIEN_ID,
+                    lopHocPhanId: LOPHOCPHAN_ID
                 }
             }
         );
+
+        // Kết quả từ SP (StatusCode và Message) luôn nằm ở bản ghi đầu tiên
+        const spResult = results[0];
+
+        // Thành công (lọt qua được Trigger, insert hoàn tất)
+        if (spResult.StatusCode === 200) {
+            return res.status(200).json({
+                success: true,
+                message: spResult.Message
+            });
+        } 
         
-        const spResponse = resultSP[0];
-        if (spResponse && spResponse.StatusCode === 400) {
+        // Thất bại do vi phạm nghiệp vụ (đã đăng ký rồi, hoặc bị Trigger ném lỗi: đầy lớp, môn tiên quyết...)
+        if (spResult.StatusCode === 400) {
             return res.status(400).json({
                 success: false,
-                message: spResponse.Message
+                message: spResult.Message
             });
         }
-        return res.status(200).json({
-            success: true,
-            message: spResponse.Message
-        });
-    } catch (error) {        
-        console.error("=== LỖI HỆ THỐNG ===", error);
+
+    } catch (error) {
+        // Bắt lỗi hệ thống (ví dụ: mất kết nối DB, sai tên cột...)
         return res.status(500).json({
             success: false,
-            message: 'Lỗi hệ thống khi nhập điểm học phần',
+            message: 'Lỗi hệ thống trong quá trình đăng ký học phần',
             error: error.message
         });
     }

@@ -19,7 +19,8 @@ BEGIN
         TAIKHOAN_ID, 
         -- Công thức tạo mã: 'SV' + CCCD
         'SV' + CCCD,
-        HOTEN, GIOITINH, NGAYSINH, SDT, EMAIL, CCCD, QUEQUAN, DIACHI, KHOAHOC, 
+        HOTEN, GIOITINH, NGAYSINH, SDT, EMAIL, CCCD, QUEQUAN, DIACHI, 
+        YEAR(GETDATE()), 
         CHUYENNGANH_ID, TRANGTHAI
     FROM inserted;
 END

@@ -1,10 +1,6 @@
 USE [QuanLyHoSoSinhVien]
 GO
 
--- ==========================================
--- 1. TẠO BẢNG
--- ==========================================
-
 CREATE TABLE [dbo].[TAIKHOAN](
 	[ID] [uniqueidentifier] NOT NULL DEFAULT newid(),
 	[TENDANGNHAP] [varchar](100) NOT NULL,
@@ -110,6 +106,7 @@ CREATE TABLE [dbo].[LOPHOCPHAN](
 	[MONHOC_ID] [uniqueidentifier] NOT NULL,
 	[GIANGVIEN_ID] [uniqueidentifier] NULL,
 	[HOCKY] [varchar](20) NOT NULL,
+	[SISO] [int] DEFAULT 0,
 	[SISO_TOIDA] [int] DEFAULT 70,
 	[TRANGTHAI] [varchar](20) DEFAULT 'Mo',
 	[NGAYTAO] [datetime2](7) DEFAULT getdate(),
@@ -122,10 +119,10 @@ GO
 CREATE TABLE [dbo].[KETQUAHOCTAP](
 	[SINHVIEN_ID] [uniqueidentifier] NOT NULL,
 	[LOPHOCPHAN_ID] [uniqueidentifier] NOT NULL,
-	[DIEMCHUYENCAN] [float] NULL,
-	[DIEMGIUAKY] [float] NULL,
-	[DIEMCUOIKY] [float] NULL,
-	[DIEMTONGKET] [float] NULL,
+	[DIEMCHUYENCAN] [float] DEFAULT 0,
+	[DIEMGIUAKY] [float] DEFAULT 0,
+	[DIEMCUOIKY] [float] DEFAULT 0,
+	[DIEMTONGKET] [float] DEFAULT 0,
 	[DIEMHECHU] [varchar](5) NULL,
 	[NGAYTAO] [datetime2](7) DEFAULT getdate(),
 	[NGAYCAPNHAT] [datetime2](7) DEFAULT getdate(),
@@ -135,14 +132,13 @@ GO
 CREATE TABLE [dbo].[MONTIENQUYET](
 	[MONHOC_ID] [uniqueidentifier] NOT NULL,
 	[MONHOC_TRUOC_ID] [uniqueidentifier] NOT NULL,
-	[LOAIDIEUKIEN] [varchar](20) DEFAULT 'TienQuyet', -- 'TienQuyet' (Phải qua môn), 'HocTruoc' (Chỉ cần từng học)
+	[LOAIDIEUKIEN] [varchar](20) DEFAULT 'TienQuyet',
 PRIMARY KEY CLUSTERED ([MONHOC_ID] ASC, [MONHOC_TRUOC_ID] ASC),
 FOREIGN KEY([MONHOC_ID]) REFERENCES [dbo].[MONHOC] ([ID]),
 FOREIGN KEY([MONHOC_TRUOC_ID]) REFERENCES [dbo].[MONHOC] ([ID])
 ) ON [PRIMARY]
 GO
 
--- 2. Bảng Lịch học (Giải quyết thời khóa biểu)
 CREATE TABLE [dbo].[LICHHOC](
 	[ID] [uniqueidentifier] NOT NULL DEFAULT newid(),
 	[LOPHOCPHAN_ID] [uniqueidentifier] NOT NULL,
@@ -157,7 +153,6 @@ CHECK ([TIET_BATDAU] > 0 AND [TIET_KETTHUC] >= [TIET_BATDAU])
 ) ON [PRIMARY]
 GO
 
--- 3. Cập nhật bảng Kết quả học tập (Để quản lý trạng thái lúc đăng ký)
 ALTER TABLE [dbo].[KETQUAHOCTAP]
 ADD [TRANGTHAI_DANGKY] [varchar](20) DEFAULT 'ThanhCong';
 GO
@@ -165,16 +160,6 @@ GO
 ALTER TABLE [dbo].[KETQUAHOCTAP] 
 ADD CHECK ([TRANGTHAI_DANGKY] IN ('ThanhCong', 'ChoDuyet', 'DaHuy'));
 GO
-
-
-
-
-
-
--- ==========================================
--- 2. THIẾT LẬP KHÓA NGOẠI (FOREIGN KEYS)
--- ==========================================
-
 ALTER TABLE [dbo].[CHUYENNGANH] ADD FOREIGN KEY([NGANH_ID]) REFERENCES [dbo].[NGANH] ([ID])
 GO
 ALTER TABLE [dbo].[SINHVIEN] ADD FOREIGN KEY([TAIKHOAN_ID]) REFERENCES [dbo].[TAIKHOAN] ([ID])
@@ -195,12 +180,6 @@ ALTER TABLE [dbo].[KETQUAHOCTAP] ADD FOREIGN KEY([SINHVIEN_ID]) REFERENCES [dbo]
 GO
 ALTER TABLE [dbo].[KETQUAHOCTAP] ADD FOREIGN KEY([LOPHOCPHAN_ID]) REFERENCES [dbo].[LOPHOCPHAN] ([ID])
 GO
-
-
--- ==========================================
--- 3. THIẾT LẬP RÀNG BUỘC KIỂM TRA (CHECK CONSTRAINTS)
--- ==========================================
-
 ALTER TABLE [dbo].[TAIKHOAN] ADD CHECK ([VAITRO] IN ('sinhvien', 'giangvien', 'quantri'))
 GO
 ALTER TABLE [dbo].[SINHVIEN] ADD CHECK ([GIOITINH] IN (N'Nam', N'Nữ', N'Khác'))
@@ -221,3 +200,63 @@ ALTER TABLE [dbo].[KETQUAHOCTAP] ADD CHECK ([DIEMCUOIKY] >= 0.0 AND [DIEMCUOIKY]
 GO
 ALTER TABLE [dbo].[KETQUAHOCTAP] ADD CHECK ([DIEMTONGKET] >= 0.0 AND [DIEMTONGKET] <= 10.0)
 GO
+
+-- ==========================================
+-- THÊM DỮ LIỆU MẪU
+-- ==========================================
+
+-- 1. Thêm Ngành
+INSERT INTO [dbo].[NGANH] (TENNGANH)
+VALUES (N'Công nghệ thông tin'), (N'Kỹ thuật phần mềm');
+
+-- 2. Thêm Chuyên ngành
+INSERT INTO [dbo].[CHUYENNGANH] (TENCHUYENNGANH, NGANH_ID)
+SELECT N'Lập trình ứng dụng', ID FROM [dbo].[NGANH] WHERE TENNGANH = N'Công nghệ thông tin';
+
+INSERT INTO [dbo].[CHUYENNGANH] (TENCHUYENNGANH, NGANH_ID)
+SELECT N'Kỹ thuật hệ thống', ID FROM [dbo].[NGANH] WHERE TENNGANH = N'Kỹ thuật phần mềm';
+
+-- 3. Thêm Tài khoản
+INSERT INTO [dbo].[TAIKHOAN] (TENDANGNHAP, MATKHAU, VAITRO)
+VALUES 
+(N'admin', N'123456', N'quantri'),
+(N'gv001', N'123456', N'giangvien'), 
+(N'gv002', N'123456', N'giangvien'),
+(N'sv001', N'123456', N'sinhvien'), 
+(N'sv002', N'123456', N'sinhvien');
+
+-- 4. Thêm Môn học
+INSERT INTO [dbo].[MONHOC] (TENMONHOC, SOTINCHI)
+VALUES (N'Lập trình Web', 3), (N'Cơ sở dữ liệu', 3), (N'Mạng máy tính', 2);
+
+-- 5. Thêm Giảng viên & Sinh viên
+DECLARE @idGV1 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[TAIKHOAN] WHERE TENDANGNHAP = N'gv001');
+DECLARE @idGV2 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[TAIKHOAN] WHERE TENDANGNHAP = N'gv002');
+DECLARE @idSV1 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[TAIKHOAN] WHERE TENDANGNHAP = N'sv001');
+DECLARE @idSV2 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[TAIKHOAN] WHERE TENDANGNHAP = N'sv002');
+DECLARE @idCN UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[CHUYENNGANH] WHERE TENCHUYENNGANH = N'Lập trình ứng dụng');
+
+INSERT INTO [dbo].[GIANGVIEN] (HOTEN, GIOITINH, SDT, TAIKHOAN_ID, CCCD)
+VALUES (N'Nguyễn Văn An', N'Nam', N'0901234567', @idGV1, N'001234567890');
+
+INSERT INTO [dbo].[GIANGVIEN] (HOTEN, GIOITINH, SDT, TAIKHOAN_ID, CCCD)
+VALUES (N'Trần Thị Bình', N'Nữ', N'0902345678', @idGV2, N'001234567891');
+
+INSERT INTO [dbo].[SINHVIEN] (HOTEN, GIOITINH, KHOAHOC, CHUYENNGANH_ID, TRANGTHAI, TAIKHOAN_ID, CCCD)
+VALUES (N'Lê Văn Cường', N'Nam', N'2023', @idCN, N'DangHoc', @idSV1, N'001111111111');
+
+INSERT INTO [dbo].[SINHVIEN] (HOTEN, GIOITINH, KHOAHOC, CHUYENNGANH_ID, TRANGTHAI, TAIKHOAN_ID, CCCD)
+VALUES (N'Nguyễn Thị Dung', N'Nữ', N'2023', @idCN, N'DangHoc', @idSV2, N'001111111112');
+
+-- 6. Thêm Lớp học phần
+DECLARE @idGiangVien1 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[GIANGVIEN] WHERE TAIKHOAN_ID = @idGV1);
+DECLARE @idGiangVien2 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[GIANGVIEN] WHERE TAIKHOAN_ID = @idGV2);
+DECLARE @idMH1 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[MONHOC] WHERE TENMONHOC = N'Lập trình Web');
+DECLARE @idMH2 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[MONHOC] WHERE TENMONHOC = N'Cơ sở dữ liệu');
+DECLARE @idMH3 UNIQUEIDENTIFIER = (SELECT ID FROM [dbo].[MONHOC] WHERE TENMONHOC = N'Mạng máy tính');
+
+INSERT INTO [dbo].[LOPHOCPHAN] (MALOP, MONHOC_ID, GIANGVIEN_ID, HOCKY, SISO_TOIDA, TRANGTHAI)
+VALUES 
+(N'AUTO-GEN', @idMH1, @idGiangVien1, N'2024-1', 40, N'Mo'),
+(N'AUTO-GEN', @idMH2, @idGiangVien1, N'2024-1', 35, N'Mo'),
+(N'AUTO-GEN', @idMH3, @idGiangVien2, N'2024-1', 30, N'Mo');

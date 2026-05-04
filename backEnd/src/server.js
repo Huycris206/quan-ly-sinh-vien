@@ -9,7 +9,6 @@ import monHocRoute from './routes/monHocRoutes.js';
 import chuyenNganhRoute from './routes/chuyenNganhRoutes.js';
 import giangVienRoute from './routes/giangVienRoutes.js';
 import ketQuaHocTapRoute from './routes/ketQuaHocTapRoutes.js';
-import lichHocRoute from './routes/lichHocRoutes.js';
 // import ChuongTrinhDaoTaoRoute  from './routes/chuongTrinhDaoTaoRoutes.js';
 
 import cors from 'cors';
@@ -22,8 +21,6 @@ connectDB();
 //chayThu();
 
 // app.use('/api/chuongtrinhdaotao', ChuongTrinhDaoTaoRoute);
-app.use('/api/ketquahoctap', ketQuaHocTapRoute);
-app.use('/api/lichhoc', lichHocRoute);
 app.use('/api/giangvien', giangVienRoute);
 app.use('/api/chuyennganh', chuyenNganhRoute);
 app.use('/api/lophocphan', lopHocPhanRoute);
@@ -31,6 +28,8 @@ app.use('/api/monhoc',monHocRoute);
 app.use('/api/nganh', nghanhRoute);
 app.use('/api/sinhvien', sinhVienRoute);
 app.use('/api/user', userRoute);
+app.use('/api/ketquahoctap', ketQuaHocTapRoute);
+
 
 app.listen(5001, () => {
     console.log('Server is running on port 5001');

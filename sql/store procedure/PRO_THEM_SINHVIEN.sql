@@ -1,0 +1,44 @@
+USE [QuanLyHoSoSinhVien]
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[PRO_THEM_SINHVIEN]
+    @P_TENDANGNHAP VARCHAR(100),
+    @P_MATKHAU VARCHAR(255),
+    @P_HOTEN NVARCHAR(100),
+    @P_GIOITINH NVARCHAR(10),
+    @P_NGAYSINH DATE,
+    @P_SDT VARCHAR(15),
+    @P_EMAIL VARCHAR(100),
+    @P_CCCD VARCHAR(20),
+    @P_CHUYENNGANH_ID UNIQUEIDENTIFIER
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @V_TAIKHOAN_ID UNIQUEIDENTIFIER = NEWID();
+
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        -- 1. Thêm vào bảng TAIKHOAN
+        INSERT INTO [dbo].[TAIKHOAN] (ID, TENDANGNHAP, MATKHAU, VAITRO)
+        VALUES (@V_TAIKHOAN_ID, @P_TENDANGNHAP, @P_MATKHAU, 'sinhvien');
+
+        -- 2. Thêm vào bảng SINHVIEN (Trigger TRG_INS_SV_TAO_MASV sẽ tự chạy để sinh MASV)
+        INSERT INTO [dbo].[SINHVIEN] (
+            TAIKHOAN_ID, HOTEN, GIOITINH, NGAYSINH, 
+            SDT, EMAIL, CCCD, CHUYENNGANH_ID
+        )
+        VALUES (
+            @V_TAIKHOAN_ID, @P_HOTEN, @P_GIOITINH, @P_NGAYSINH, 
+            @P_SDT, @P_EMAIL, @P_CCCD, @P_CHUYENNGANH_ID
+        );
+
+        COMMIT TRANSACTION;
+        SELECT 200 AS StatusCode, N'Thêm sinh viên và tài khoản thành công!' AS Message;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        SELECT 500 AS StatusCode, ERROR_MESSAGE() AS Message;
+    END CATCH
+END
+GO

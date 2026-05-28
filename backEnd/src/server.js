@@ -8,6 +8,8 @@ import nghanhRoute from './routes/nganhRoutes.js';
 import monHocRoute from './routes/monHocRoutes.js';
 import chuyenNganhRoute from './routes/chuyenNganhRoutes.js';
 import giangVienRoute from './routes/giangVienRoutes.js';
+import ketQuaHocTapRoute from './routes/ketQuaHocTapRoutes.js';
+import authRoute from './routes/authRoutes.js';
 // import ChuongTrinhDaoTaoRoute  from './routes/chuongTrinhDaoTaoRoutes.js';
 
 import cors from 'cors';
@@ -27,6 +29,9 @@ app.use('/api/monhoc',monHocRoute);
 app.use('/api/nganh', nghanhRoute);
 app.use('/api/sinhvien', sinhVienRoute);
 app.use('/api/user', userRoute);
+app.use('/api/ketquahoctap', ketQuaHocTapRoute);
+app.use('/api/auth', authRoute);
+
 
 app.listen(5001, () => {
     console.log('Server is running on port 5001');

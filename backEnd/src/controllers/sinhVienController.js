@@ -1,34 +1,32 @@
-import { SinhVien, ChuyenNganh, Nganh, User } from '../models/index.js';
+import { SinhVien, ChuyenNganh, Nganh, TaiKhoan, sequelize } from '../models/index.js';
+import bcrypt from 'bcryptjs';
 
-// 1. Lấy danh sách tất cả sinh viên (Kèm tên Chuyên Ngành)
 export const getAllSinhVien = async (req, res) => {
     try {
         const danhSach = await SinhVien.findAll({
-            where: { 
-                IsDeleted: false // Lọc bỏ những sinh viên đã bị xóa mềm
-            },
+            where: { DAXOA: false },
             include: [
                 {
                     model: ChuyenNganh,
-                    attributes: ['Name'],
-                    include:[
+                    attributes: ['TENCHUYENNGANH'],
+                    include: [
                         {
                             model: Nganh,
-                            attributes: ['Name']
+                            attributes: ['TENNGANH']
                         }
-                    ] // Chỉ lấy cột 'Name' của bảng ChuyenNganh để data gọn gàng
+                    ]
                 },
-                
-
+                {
+                    model: TaiKhoan,
+                    attributes: ['TENDANGNHAP', 'VAITRO']
+                }
             ]
         });
-
         return res.status(200).json({
             success: true,
             data: danhSach
         });
     } catch (error) {
-        await transaction.rollback()
         return res.status(500).json({
             success: false,
             message: 'Lỗi khi lấy danh sách sinh viên',
@@ -37,37 +35,34 @@ export const getAllSinhVien = async (req, res) => {
     }
 };
 
-// 2. Lấy thông tin chi tiết 1 sinh viên theo ID (Kèm tên Chuyên Ngành)
 export const getSinhVienById = async (req, res) => {
     const { id } = req.params;
-
     try {
         const sinhVien = await SinhVien.findOne({
-            where: { 
-                Id: id,
-                IsDeleted: false 
-            },
+            where: { ID: id, DAXOA: false },
             include: [
                 {
                     model: ChuyenNganh,
-                    attributes: ['Name'],
-                    include:[
+                    attributes: ['TENCHUYENNGANH'],
+                    include: [
                         {
                             model: Nganh,
-                            attributes: ['Name']
+                            attributes: ['TENNGANH']
                         }
-                    ] //
+                    ]
+                },
+                {
+                    model: TaiKhoan,
+                    attributes: ['TENDANGNHAP', 'VAITRO']
                 }
             ]
         });
-
         if (!sinhVien) {
             return res.status(404).json({
                 success: false,
                 message: 'Không tìm thấy sinh viên!'
             });
         }
-
         return res.status(200).json({
             success: true,
             data: sinhVien
@@ -81,116 +76,137 @@ export const getSinhVienById = async (req, res) => {
     }
 };
 
-// 3. Thêm mới sinh viên
 export const createSinhVien = async (req, res) => {
-    // Nhận dữ liệu từ request body
-    const {  Student_id, Full_name, Gender, Birthday, Phone, ChuyenNganhId, TrangThai } = req.body;
-    const transaction = await sequelize.transaction();
     try {
-        const newUser = await User.create({
-            Username: Student_id, // Lấy mã SV làm tài khoản đăng nhập
-            Password_hash: '0', // Mặc định mật khẩu là '0' (bắt buộc phải đổi khi đăng nhập lần đầu)
-            Role: 'student' // Gán cứng role là sinh viên
-        }, { transaction });
-        const newSinhVien = await SinhVien.create({
-            UserId: newUser.Id,
-            Student_id,
-            Full_name,
-            Gender,
-            Birthday,
-            Phone,
-            ChuyenNganhId,
-            TrangThai
-        }, { transaction });
-        await transaction.commit();
+        const {
+            MATKHAU, HOTEN, GIOITINH, NGAYSINH, SDT, EMAIL, 
+            CCCD, QUEQUAN, DIACHI, TRANGTHAI, CHUYENNGANH_ID
+        } = req.body;
+        if(!CHUYENNGANH_ID) {
+            return res.status(400).json({
+                success: false,
+                message: 'Thiếu Chuyên ngành để tạo sinh viên!'
+            });
+        }
+        const checkChuyenNganh = await ChuyenNganh.findOne({ where: { ID: CHUYENNGANH_ID, DAXOA: false } });
+        if (!checkChuyenNganh) {
+            return res.status(404).json({ success: false, message: 'Chuyên ngành không tồn tại trong hệ thống!' });
+        }
+        // Bắt lỗi ngay từ cửa: Không có CCCD thì không thể tạo Tên Đăng Nhập
+        if (!CCCD) {
+            return res.status(400).json({ success: false, message: 'Thiếu CCCD!' });
+        }
+
+        // Tự động giả lập MASV y hệt Trigger để Node.js lấy làm Tên Đăng Nhập và đi tìm data
+        const MASV_GENERATED = 'SV' + CCCD;
+
+        // Băm mật khẩu
+        const passwordToHash = MATKHAU || '123456';
+        const hashedPassword = await bcrypt.hash(passwordToHash, 10);
+
+        // Gọi SP với CHÍNH XÁC 10 THAM SỐ (đã bỏ @P_MASV)
+        await sequelize.query(
+            `EXEC [dbo].[PRO_THEM_SINHVIEN] 
+                @P_TENDANGNHAP = :username, 
+                @P_MATKHAU = :password,
+                @P_HOTEN = :hoten, 
+                @P_GIOITINH = :gioitinh,
+                @P_NGAYSINH = :ngaysinh, 
+                @P_SDT = :sdt, 
+                @P_EMAIL = :email,
+                @P_CCCD = :cccd, 
+                @P_CHUYENNGANH_ID = :chuyennganh_id`,
+            
+            {
+                replacements: {
+                    username: MASV_GENERATED, 
+                    password: hashedPassword,
+                    hoten: HOTEN,
+                    gioitinh: GIOITINH || null, 
+                    ngaysinh: NGAYSINH || null, 
+                    sdt: SDT || null, 
+                    email: EMAIL || null,
+                    cccd: CCCD, 
+                    chuyennganh_id: CHUYENNGANH_ID,
+                },
+                type: sequelize.QueryTypes.RAW
+            }
+        );
+
+        // Tìm lại Sinh viên vừa tạo để trả về Client
+        const newSinhVien = await SinhVien.findOne({
+            where: { MASV: MASV_GENERATED, DAXOA: false },
+            include: [{ 
+                model: TaiKhoan, 
+                attributes: ['ID', 'TENDANGNHAP', 'VAITRO', 'NGAYTAO'] 
+            }]
+        });
+        
         return res.status(201).json({
             success: true,
-            message: 'Thêm sinh viên thành công!',
-            data: { 
-                sinhVien: newSinhVien,
-                user: { Id: newUser.Id, Username: newUser.Username, Role: newUser.Role }
-        }});
+            message: 'Thêm sinh viên thành công',
+            data: newSinhVien
+        });
+
     } catch (error) {
+        console.error("=== LỖI CỤ THỂ ===", error); 
         return res.status(500).json({
             success: false,
             message: 'Lỗi khi thêm sinh viên',
-            error: error.message
+            error: error.message || "Lỗi không xác định"
         });
     }
 };
-export const deleteSinhVien = async (req, res) => {
-    try {
-        const { id } = req.params;
 
-        // Tìm sinh viên
-        const sinhVien = await SinhVien.findOne({
-            where: { 
-                Id: id,
-                IsDeleted: false 
-            }
-        });
-
-        if (!sinhVien) {
-            return res.status(404).json({
-                success: false,
-                message: 'Không tìm thấy sinh viên hoặc đã bị xóa từ trước!'
-            });
-        }
-
-        // Xóa mềm: Chuyển IsDeleted thành true thay vì xóa vĩnh viễn (Hard delete)
-        await sinhVien.update({ IsDeleted: true });
-
-        return res.status(200).json({
-            success: true,
-            message: 'Đã xóa sinh viên thành công!'
-        });
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: 'Lỗi khi xóa sinh viên',
-            error: error.message
-        });
-    }
-};
 export const updateSinhVien = async (req, res) => {
+    const { id } = req.params;
+    const updateData = req.body;
     try {
-        const { id } = req.params; // Lấy ID sinh viên từ URL
-        const updateData = req.body; // Lấy dữ liệu cần sửa
-
-        // Tìm sinh viên xem có tồn tại không
         const sinhVien = await SinhVien.findOne({
-            where: { 
-                Id: id,
-                IsDeleted: false 
-            },
-            
+            where: { ID: id, DAXOA: false }
         });
-
         if (!sinhVien) {
             return res.status(404).json({
                 success: false,
                 message: 'Không tìm thấy sinh viên!'
             });
         }
-
-        // Thực hiện cập nhật (chỉ cập nhật những trường được gửi lên)
-        await sinhVien.update({
-                ...updateData, // Cập nhật các trường từ body gửi lên
-                 // Dùng ngày giờ của SQL Server
-            },
-            {
-               // Bắt buộc phải có dòng này để Sequelize không chèn ngày tháng lỗi vào
-            });
-
+        await sinhVien.update(updateData);
         return res.status(200).json({
             success: true,
-            message: 'Cập nhật thông tin sinh viên thành công!',
+            message: 'Cập nhật sinh viên thành công',
             data: sinhVien
         });
     } catch (error) {
         return res.status(500).json({
             success: false,
             message: 'Lỗi khi cập nhật sinh viên',
+            error: error.message
+        });
+    }
+};
+
+export const deleteSinhVien = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const sinhVien = await SinhVien.findOne({
+            where: { ID: id, DAXOA: false }
+        });
+        if (!sinhVien) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy sinh viên!'
+            });
+        }
+        await sinhVien.update({ DAXOA: true });
+        return res.status(200).json({
+            success: true,
+            message: 'Xóa sinh viên thành công'
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Lỗi khi xóa sinh viên',
             error: error.message
         });
     }

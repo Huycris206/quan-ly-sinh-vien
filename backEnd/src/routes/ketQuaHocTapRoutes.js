@@ -1,12 +1,14 @@
 import express from 'express';
-import { createKetQuaHocTap, deleteKetQuaHocTap, getAllKetQuaHocTap, getKetQuaHocTapById, updateKetQuaHocTap } from '../controllers/ketQuaHocTapController.js';
+import {  updateDiemSinhVien,getBangDiemCaNhan,getDiemByLopHocPhan,dangKyMonHoc,getDiemSinhVienTrongLop } from '../controllers/ketQuaHocTapController.js';
 
 const router = express.Router();
 
-router.get('/', getAllKetQuaHocTap);
-router.get('/:id', getKetQuaHocTapById);
-router.post('/', createKetQuaHocTap);
-router.put('/:id', updateKetQuaHocTap);
-router.delete('/:id', deleteKetQuaHocTap);
+router.get('/lophocphan/:lopHocPhanId', getDiemByLopHocPhan);
+router.put('/update-diem', updateDiemSinhVien);
+
+router.get('/sinhvien/:sinhVienId', getBangDiemCaNhan);
+router.post('/dang-ky-mon-hoc', dangKyMonHoc);
+router.get('/chitiet/:lopHocPhanId/:sinhVienId', getDiemSinhVienTrongLop);
+
 
 export default router;

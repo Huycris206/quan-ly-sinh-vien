@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"]
+    },
+    "jsx": "react-jsx"
+  },
+<<<<<<< HEAD
+  "include": ["src"]
+=======
+  "include": ["src", "tailwind.config.js"]
+>>>>>>> 993e3d820cb4a892c958b7b5be2bca445e57b7d5
+}
